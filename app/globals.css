@@ -211,3 +211,10 @@ tr.cliquable:hover{background:#FAF6F1}
 .supp-mot{font-family:ui-monospace,Consolas,monospace;background:#F0E9E1;padding:2px 6px;word-break:break-all}
 .supp-coche{display:flex;gap:10px;align-items:center;font-weight:500;margin-bottom:6px}
 .supp-boutons{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;flex-wrap:wrap}
+
+/* Accueil du membre : le lien, et l'argent reçu à sa droite */
+.haut-membre{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.36fr);gap:14px;margin-bottom:22px}
+.haut-membre .lien-carte{margin-bottom:0}
+.argent-haut{display:flex;flex-direction:column;justify-content:center}
+.argent-haut b{font-size:38px}
+@media (max-width:1000px){.haut-membre{grid-template-columns:1fr}}

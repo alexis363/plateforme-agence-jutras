@@ -27,6 +27,9 @@ export function chiffresMembre(visites: string[], refs: Reference[]) {
     contactes: atteint(2),
     rencontres: atteint(3),
     clients: atteint(4),
+    // Étape 4 « Devenu client » = Kairos installé, pendant le mois d'essai gratuit ; étape 5 = premier paiement.
+    enEssai: actives.filter((r) => r.etape === 4).length,
+    payants: atteint(5),
     verses: atteint(6),
     recu: atteint(6) * RECOMPENSE,
     aVenir: (atteint(4) - atteint(6)) * RECOMPENSE,

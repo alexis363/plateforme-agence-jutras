@@ -22,17 +22,20 @@ export default async function AccueilMembre() {
       <h1 className="titre">Bonjour {m.prenom}, <em>merci de parler de nous.</em></h1>
       <p className="sous">Vous présentez un entrepreneur ; s'il devient client de Kairos, vous recevez {RECOMPENSE} $.</p>
 
-      <div className="lien-carte">
-        <h2>Votre lien <em>personnel</em></h2>
-        <p>Envoyez-le à un entrepreneur qui passe ses soirées dans la paperasse. Quand il remplit sa demande par ce lien, elle vous est attribuée automatiquement.</p>
-        <Partage url={lien.url} affiche={lien.affiche} slug={m.slug} />
+      <div className="haut-membre">
+        <div className="lien-carte">
+          <h2>Votre lien <em>personnel</em></h2>
+          <p>Envoyez-le à un entrepreneur qui passe ses soirées dans la paperasse. Quand il remplit sa demande par ce lien, elle vous est attribuée automatiquement.</p>
+          <Partage url={lien.url} affiche={lien.affiche} slug={m.slug} />
+        </div>
+        <div className="chiffre argent argent-haut"><b>{c.recu} $</b><span>reçus{c.aVenir ? ` · ${c.aVenir} $ à venir` : ""}</span></div>
       </div>
 
       <div className="chiffres">
         <div className="chiffre"><b>{c.visites}</b><span>visites de votre lien</span></div>
         <div className="chiffre"><b>{c.demandes}</b><span>rendez-vous réservé{c.demandes > 1 ? "s" : ""}</span></div>
-        <div className="chiffre"><b>{c.clients}</b><span>devenus clients</span></div>
-        <div className="chiffre argent"><b>{c.recu} $</b><span>reçus{c.aVenir ? ` · ${c.aVenir} $ à venir` : ""}</span></div>
+        <div className="chiffre"><b>{c.enEssai}</b><span>{c.enEssai > 1 ? "personnes" : "personne"} en essai gratuit</span></div>
+        <div className="chiffre"><b>{c.payants}</b><span>client{c.payants > 1 ? "s" : ""}</span></div>
       </div>
 
       <div className="deux">
