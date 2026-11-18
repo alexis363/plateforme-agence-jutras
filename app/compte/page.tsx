@@ -30,7 +30,7 @@ export default async function AccueilMembre() {
 
       <div className="chiffres">
         <div className="chiffre"><b>{c.visites}</b><span>visites de votre lien</span></div>
-        <div className="chiffre"><b>{c.demandes}</b><span>demandes reçues</span></div>
+        <div className="chiffre"><b>{c.demandes}</b><span>rendez-vous réservé{c.demandes > 1 ? "s" : ""}</span></div>
         <div className="chiffre"><b>{c.clients}</b><span>devenus clients</span></div>
         <div className="chiffre argent"><b>{c.recu} $</b><span>reçus{c.aVenir ? ` · ${c.aVenir} $ à venir` : ""}</span></div>
       </div>
