@@ -58,7 +58,7 @@ export default function FormulaireReglages({ initial }: { initial: ReglagesAgend
           </select>
         </label>
       </div>
-      <p className="note">Le temps entre deux rendez-vous reste libre avant et après chacun, aussi autour de ce qui est déjà dans votre agenda Google.</p>
+      <p className="note">Les plages commencent toujours aux 15 minutes. Quand un rendez-vous est pris, le temps entre deux rendez-vous reste libre avant et après lui (aussi autour de ce qui est dans votre agenda Google).</p>
 
       <h2 style={{ marginTop: 22 }}>Vos disponibilités par semaine</h2>
       {JOURS.map(([j, nom]) => (

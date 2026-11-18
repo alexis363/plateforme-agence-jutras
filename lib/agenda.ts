@@ -9,6 +9,10 @@
 
 export const FUSEAU = "America/Toronto"; // l'heure de Québec
 export const PREAVIS_H = 12;
+// Une plage commence à chaque quart d'heure, quels que soient la durée et le temps entre les rendez-vous :
+// plus de choix pour le client (demande d'Alexis du 18 nov. 2026). La pause sert seulement à bloquer
+// les plages autour d'un rendez-vous déjà pris.
+const PAS_MIN = 15;
 
 import { rendezVousPris, lireReglagesAgenda } from "./depot.ts";
 import type { ReglagesAgenda } from "./types.ts";
@@ -76,8 +80,8 @@ export function momentCourt(iso: string): string {
 export type Plage = { debut: string; heure: string };
 export type JourDePlages = { date: string; libelle: string; plages: Plage[] };
 
-// Les plages possibles selon les réglages : une toutes les (durée + pause) minutes, et le rendez-vous finit
-// avant la fin de la disponibilité.
+// Les plages possibles selon les réglages : une tous les quarts d'heure, et le rendez-vous finit avant la fin
+// de la disponibilité.
 function plagesTheoriques(r: ReglagesAgenda, maintenant = Date.now()): { debut: number; jourCle: string; libelle: string; heure: string }[] {
   const auj = enQuebec(maintenant);
   const premier = maintenant + PREAVIS_H * 3600e3;
@@ -91,7 +95,7 @@ function plagesTheoriques(r: ReglagesAgenda, maintenant = Date.now()): { debut: 
     const [a, m, j] = [d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate()];
     for (const [de, a2] of r.disponibilites[String(d.getUTCDay())] ?? []) {
       const [h1, m1] = de.split(":").map(Number), [h2, m2] = a2.split(":").map(Number);
-      for (let t = h1 * 60 + m1; t + r.duree <= h2 * 60 + m2; t += r.duree + r.pause) {
+      for (let t = h1 * 60 + m1; t + r.duree <= h2 * 60 + m2; t += PAS_MIN) {
         const debut = depuisQuebec(a, m, j, Math.floor(t / 60), t % 60).getTime();
         if (debut < premier) continue;
         sortie.push({
