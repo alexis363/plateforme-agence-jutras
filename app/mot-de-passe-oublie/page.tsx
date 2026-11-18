@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Marque from "../Marque.tsx";
 import Formulaire from "./Formulaire.tsx";
-import { estLocal } from "@/lib/depot.ts";
+import { boiteLocale } from "@/lib/depot.ts";
 
 export const metadata = { title: "Mot de passe oublié · Agence Jutras" };
 export const dynamic = "force-dynamic";
@@ -13,7 +13,7 @@ export default function MotDePasseOublie() {
         <Marque />
         <h1>Mot de passe <em>oublié</em></h1>
         <p className="sous">Entrez votre courriel : on vous envoie un lien pour choisir un nouveau mot de passe.</p>
-        <Formulaire local={estLocal()} />
+        <Formulaire local={boiteLocale()} />
         <p className="bas"><Link href="/connexion">Retour à la connexion</Link></p>
       </div>
     </div>

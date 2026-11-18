@@ -1,8 +1,8 @@
-// Envoi des courriels. Sur l'ordinateur : la boîte locale (/dev/courriels). En ligne : Resend.
-import { estLocal, garderCourrielLocal } from "./depot.ts";
+// Envoi des courriels. Sur l'ordinateur sans Resend : la boîte locale (/dev/courriels). Sinon : Resend.
+import { boiteLocale, garderCourrielLocal } from "./depot.ts";
 
 export async function envoyerCourriel(c: { a: string; sujet: string; texte: string; lien?: string }): Promise<void> {
-  if (estLocal()) {
+  if (boiteLocale()) {
     await garderCourrielLocal({ a: c.a, sujet: c.sujet, texte: c.texte, lien: c.lien ?? null });
     return;
   }

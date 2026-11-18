@@ -25,6 +25,23 @@ Puis `http://localhost:3100/connexion`, avec `sophie@exemple.ca` (membre) ou `al
 mot de passe `demonstration`. Les courriels (confirmation, mot de passe oublié) arrivent dans la boîte locale,
 `http://localhost:3100/dev/courriels`. La page d'arrivée d'un lien : `http://localhost:3100/r/sophie-g`.
 
+## Brancher la vraie base (Supabase)
+
+1. Dans Supabase, projet de la plateforme (jamais celui de Kairos) : **SQL Editor** → coller tout `supabase/installation.sql` → **Run**.
+2. **Project Settings → API** : copier l'adresse du projet dans `SUPABASE_URL` et la **clé secrète** dans `SUPABASE_SECRET_KEY`, dans `.env.local`.
+3. `npm run supabase` : l'application tourne sur `http://localhost:3100` avec la vraie base ; les courriels restent dans la boîte locale tant que `RESEND_API_KEY` est vide.
+4. `npm run test:isolation -- --supabase` : le même test, sur la vraie base. Il crée des membres « …@test.local ».
+
+## Le compte admin
+
+Deux façons, au choix :
+
+- **Par les réglages** (choix d'Alexis, 17 nov. 2026) : `ADMIN_COURRIELS` et `ADMIN_MOT_DE_PASSE` dans Vercel (et
+  `.env.local`). À la première connexion avec ce courriel et ce mot de passe, le compte admin se crée, déjà confirmé
+  (`lib/amorce.ts`). Ensuite la base fait foi : on peut retirer `ADMIN_MOT_DE_PASSE` des réglages.
+- **Par un script** : `npm run creer-admin` crée ou remet à neuf le compte dans la vraie base ; le mot de passe se tape
+  dans le terminal.
+
 ## Prouver l'isolation
 
 Avec l'application en marche :
@@ -55,19 +72,20 @@ Dans `lib/regles.ts` : 100 $, Kairos seulement, 6 mois, les 6 étapes, les place
 | `app/admin/` | Console : Aujourd'hui, Références, Membres. Clients, Suivis, Avis, Factures et Soutien viennent au bloc 2 |
 
 Connexion par **courriel et mot de passe**, pour les membres comme pour la console (décision d'Alexis du 17 nov. 2026).
-Mots de passe hachés avec scrypt (`lib/motdepasse.ts`), 10 caractères minimum, blocage de 15 min après 5 essais ratés.
+Mots de passe hachés avec scrypt (`lib/motdepasse.ts`), 10 caractères minimum, blocage de 15 min après 5 essais ratés
+(table `tentatives` dans la base).
 Le courriel est confirmé une fois, par un lien valide 48 h ; « Mot de passe oublié » envoie un lien valide 30 min, à usage unique.
 
 ## Ce qui manque avant la mise en ligne
 
-1. **Le moteur Supabase** de `lib/depot.ts` (le moteur actuel est un fichier local ; en ligne, l'application refuse de démarrer sans base).
+1. ~~Supabase~~ : branché le 17 nov. 2026. Tables installées, test de sécurité passé sur la vraie base, base vide et propre.
+   Il faudra copier `SUPABASE_URL` et `SUPABASE_SECRET_KEY` dans Vercel.
 2. **Resend** branché sur agencejutras.com (`RESEND_API_KEY`, `COURRIEL_EXPEDITEUR`).
 3. **Variables** : `SESSION_SECRET` (32 caractères ou plus), `ADMIN_COURRIELS`, `APP_URL`, `SITE_URL`.
 4. **Les adresses** : `compte.agencejutras.com` pour l'application ; une redirection `agencejutras.com/r/*` vers l'application.
 5. **La Loi 25** : la politique de confidentialité du site doit parler du programme (noms, cellulaires, courriels Interac, témoin `aj_ref` de 90 jours).
 6. **La prise de rendez-vous** : la page demande un moment préféré ; Alexis rappelle. Pas encore relié à son agenda.
-7. **Le blocage après 5 essais** vit dans la mémoire du serveur : en ligne (plusieurs serveurs), le garder dans la base.
-   Changer de mot de passe ne ferme pas encore les autres sessions ouvertes.
+7. Changer de mot de passe ne ferme pas encore les autres sessions ouvertes.
 
 ## Règles du projet
 

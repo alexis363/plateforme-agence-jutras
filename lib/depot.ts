@@ -3,27 +3,59 @@
 // Règle d'isolation : une fonction qu'un membre déclenche reçoit le membre de la SESSION (lib/session.ts),
 // jamais un identifiant envoyé par le navigateur. Les fonctions « admin… » ne s'appellent qu'après exigerAdmin().
 //
-// Moteur actuel : un fichier JSON dans .donnees/ (ordinateur seulement). Le moteur Supabase viendra avant la
-// mise en ligne ; d'ici là, l'application refuse de démarrer en ligne (voir moteurPret()).
+// Deux moteurs :
+//  - Supabase, dès que SUPABASE_URL et SUPABASE_SECRET_KEY sont là (en ligne, et sur l'ordinateur avec .env.local) ;
+//  - un fichier JSON dans .donnees/, sur l'ordinateur seulement (npm run local), pour les démonstrations et le test.
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { randomUUID, createHash, randomBytes } from "node:crypto";
-import type { Base, Membre, Reference, Jeton, CourrielLocal } from "./types.ts";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import type { Base, Membre, Reference, Jeton, CourrielLocal, Evenement } from "./types.ts";
 import { VALIDITE_MOIS } from "./regles.ts";
 
-const FICHIER = path.join(process.cwd(), ".donnees", "base.json");
+const DOSSIER = path.join(process.cwd(), ".donnees");
+const FICHIER = path.join(DOSSIER, "base.json");
 const VIDE: Base = { membres: [], references: [], visites: [], jetons: [], courriels: [] };
 
+// Sur l'ordinateur, sans Supabase : le fichier local.
 export function estLocal(): boolean {
   return process.env.COMPTE_LOCAL === "oui" && !process.env.VERCEL;
 }
 
-function moteurPret(): void {
-  if (!estLocal()) throw new Error("Aucune base configurée : le moteur Supabase n'est pas encore branché.");
+// La boîte locale des courriels : sur l'ordinateur, tant que Resend n'est pas branché.
+export function boiteLocale(): boolean {
+  return !process.env.VERCEL && !process.env.RESEND_API_KEY;
 }
 
+let client: SupabaseClient | null = null;
+function sb(): SupabaseClient | null {
+  const url = process.env.SUPABASE_URL, cle = process.env.SUPABASE_SECRET_KEY;
+  if (!url || !cle) return null;
+  client ??= createClient(url, cle, { auth: { persistSession: false, autoRefreshToken: false } });
+  return client;
+}
+
+function moteur(): "supabase" | "fichier" {
+  if (sb()) return "supabase";
+  if (estLocal()) return "fichier";
+  throw new Error("Aucune base configurée : SUPABASE_URL et SUPABASE_SECRET_KEY manquent.");
+}
+
+// Une erreur de Supabase arrête tout : jamais de donnée à moitié écrite en silence.
+function ok<T>(r: { data: T; error: { message: string } | null }): T {
+  if (r.error) throw new Error(`Base de données : ${r.error.message}`);
+  return r.data;
+}
+
+// Même chose pour une requête qui renvoie une liste : jamais null.
+function liste<T>(r: { data: T[] | null; error: { message: string } | null }): T[] {
+  if (r.error) throw new Error(`Base de données : ${r.error.message}`);
+  return r.data ?? [];
+}
+
+// ---------- Moteur fichier ----------
+
 async function lire(): Promise<Base> {
-  moteurPret();
   try {
     return { ...VIDE, ...JSON.parse(await fs.readFile(FICHIER, "utf8")) };
   } catch {
@@ -37,13 +69,31 @@ function ecrire<T>(changer: (b: Base) => T): Promise<T> {
   const suite = file.then(async () => {
     const b = await lire();
     const resultat = changer(b);
-    await fs.mkdir(path.dirname(FICHIER), { recursive: true });
+    await fs.mkdir(DOSSIER, { recursive: true });
     await fs.writeFile(FICHIER, JSON.stringify(b, null, 2));
     return resultat;
   });
   file = suite.catch(() => undefined);
   return suite;
 }
+
+// ---------- Conversions ligne Supabase ↔ objet ----------
+
+type Ligne = Record<string, unknown>;
+
+const membreDe = (r: Ligne): Membre => ({
+  id: r.id as string, prenom: r.prenom as string, nom: r.nom as string, cellulaire: r.cellulaire as string,
+  courriel: r.courriel as string, slug: r.slug as string, motDePasse: (r.mot_de_passe as string) ?? null,
+  role: r.role as Membre["role"], confirme: r.confirme as boolean, accepteRegles: (r.accepte_regles as string) ?? null,
+  prenomVisible: r.prenom_visible as boolean, creeLe: r.cree_le as string,
+});
+
+const refDe = (r: Ligne): Reference => ({
+  id: r.id as string, membreId: r.membre_id as string, entreprise: r.entreprise as string, contact: r.contact as string,
+  metier: r.metier as string, cellulaire: r.cellulaire as string, courriel: r.courriel as string,
+  casseTete: r.casse_tete as string, moment: r.moment as string, creeLe: r.cree_le as string, etape: r.etape as number,
+  fermee: (r.fermee as string) ?? null, notes: r.notes as string, historique: (r.historique as Evenement[]) ?? [],
+});
 
 const maintenant = () => new Date().toISOString();
 export const normaliserCourriel = (c: string) => c.trim().toLowerCase();
@@ -52,26 +102,42 @@ export const normaliserCellulaire = (c: string) => c.replace(/\D/g, "").replace(
 // ---------- Membres ----------
 
 export async function membreParId(id: string): Promise<Membre | null> {
+  const s = sb();
+  if (moteur() === "supabase") {
+    const r = ok(await s!.from("membres").select("*").eq("id", id).maybeSingle());
+    return r ? membreDe(r) : null;
+  }
   return (await lire()).membres.find((m) => m.id === id) ?? null;
 }
 
 export async function membreParCourriel(courriel: string): Promise<Membre | null> {
   const c = normaliserCourriel(courriel);
+  if (moteur() === "supabase") {
+    const r = ok(await sb()!.from("membres").select("*").eq("courriel", c).maybeSingle());
+    return r ? membreDe(r) : null;
+  }
   return (await lire()).membres.find((m) => m.courriel === c) ?? null;
 }
 
 // Pour la page publique du lien : seulement un membre confirmé, et seulement ce que la page affiche.
 export async function membrePublic(slug: string): Promise<{ id: string; prenom: string | null } | null> {
+  if (moteur() === "supabase") {
+    const r = ok(await sb()!.from("membres").select("id, prenom, prenom_visible").eq("slug", slug).eq("confirme", true).maybeSingle());
+    return r ? { id: r.id as string, prenom: r.prenom_visible ? (r.prenom as string) : null } : null;
+  }
   const m = (await lire()).membres.find((x) => x.slug === slug && x.confirme);
   return m ? { id: m.id, prenom: m.prenomVisible ? m.prenom : null } : null;
 }
 
-function slugLibre(b: Base, prenom: string, nom: string): string {
-  const base = `${prenom}-${nom.slice(0, 1)}`
+function baseSlug(prenom: string, nom: string): string {
+  return `${prenom}-${nom.slice(0, 1)}`
     .normalize("NFD").replace(/[̀-ͯ]/g, "")
     .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "membre";
+}
+
+function slugLibre(base: string, pris: string[]): string {
   let slug = base;
-  for (let n = 2; b.membres.some((m) => m.slug === slug); n++) slug = `${base}${n}`;
+  for (let n = 2; pris.includes(slug); n++) slug = `${base}${n}`;
   return slug;
 }
 
@@ -80,14 +146,33 @@ export type NouveauMembre = { prenom: string; nom: string; cellulaire: string; c
 // Retourne le membre existant si le courriel est déjà inscrit : l'inscription ne révèle pas qui est membre,
 // et ne change jamais le mot de passe d'un compte existant. `d.motDePasse` est déjà haché.
 export async function creerMembre(d: NouveauMembre, role: Membre["role"]): Promise<Membre> {
+  const courriel = normaliserCourriel(d.courriel);
+  const champs = { prenom: d.prenom.trim(), nom: d.nom.trim(), cellulaire: d.cellulaire.trim(), courriel };
+  const base = baseSlug(d.prenom, d.nom);
+
+  if (moteur() === "supabase") {
+    const existant = await membreParCourriel(courriel);
+    if (existant) return existant;
+    const pris = liste(await sb()!.from("membres").select("slug").like("slug", `${base}%`)).map((r) => r.slug as string);
+    const r = await sb()!.from("membres").insert({
+      ...champs, slug: slugLibre(base, pris), mot_de_passe: d.motDePasse, role, confirme: false,
+      accepte_regles: maintenant(), prenom_visible: d.prenomVisible,
+    }).select("*").single();
+    // Deux inscriptions au même instant : l'unicité du courriel tranche, on renvoie le compte gagnant.
+    if (r.error) {
+      const gagnant = await membreParCourriel(courriel);
+      if (gagnant) return gagnant;
+      throw new Error(`Base de données : ${r.error.message}`);
+    }
+    return membreDe(r.data);
+  }
+
   return ecrire((b) => {
-    const courriel = normaliserCourriel(d.courriel);
     const existant = b.membres.find((m) => m.courriel === courriel);
     if (existant) return existant;
     const m: Membre = {
-      id: randomUUID(), prenom: d.prenom.trim(), nom: d.nom.trim(), cellulaire: d.cellulaire.trim(), courriel,
-      slug: slugLibre(b, d.prenom, d.nom), motDePasse: d.motDePasse, role, confirme: false, accepteRegles: maintenant(),
-      prenomVisible: d.prenomVisible, creeLe: maintenant(),
+      id: randomUUID(), ...champs, slug: slugLibre(base, b.membres.map((x) => x.slug)), motDePasse: d.motDePasse,
+      role, confirme: false, accepteRegles: maintenant(), prenomVisible: d.prenomVisible, creeLe: maintenant(),
     };
     b.membres.push(m);
     return m;
@@ -95,21 +180,47 @@ export async function creerMembre(d: NouveauMembre, role: Membre["role"]): Promi
 }
 
 export async function majProfil(membreId: string, d: { prenom: string; nom: string; cellulaire: string; prenomVisible: boolean }): Promise<void> {
+  const champs = { prenom: d.prenom.trim(), nom: d.nom.trim(), cellulaire: d.cellulaire.trim() };
+  if (moteur() === "supabase") {
+    ok(await sb()!.from("membres").update({ ...champs, prenom_visible: d.prenomVisible }).eq("id", membreId));
+    return;
+  }
   await ecrire((b) => {
     const m = b.membres.find((x) => x.id === membreId);
     if (!m) throw new Error("Membre introuvable");
-    Object.assign(m, { prenom: d.prenom.trim(), nom: d.nom.trim(), cellulaire: d.cellulaire.trim(), prenomVisible: d.prenomVisible });
+    Object.assign(m, champs, { prenomVisible: d.prenomVisible });
   });
 }
 
 export async function poserRole(membreId: string, role: Membre["role"]): Promise<void> {
+  if (moteur() === "supabase") {
+    ok(await sb()!.from("membres").update({ role }).eq("id", membreId));
+    return;
+  }
   await ecrire((b) => {
     const m = b.membres.find((x) => x.id === membreId);
     if (m) m.role = role;
   });
 }
 
+// Seulement pour l'amorçage du compte admin (lib/amorce.ts) : le compte est créé déjà confirmé.
+export async function confirmerMembre(membreId: string): Promise<Membre | null> {
+  if (moteur() === "supabase") {
+    const r = ok(await sb()!.from("membres").update({ confirme: true }).eq("id", membreId).select("*").maybeSingle());
+    return r ? membreDe(r) : null;
+  }
+  return ecrire((b) => {
+    const m = b.membres.find((x) => x.id === membreId);
+    if (m) m.confirme = true;
+    return m ?? null;
+  });
+}
+
 export async function changerMotDePasse(membreId: string, hache: string): Promise<void> {
+  if (moteur() === "supabase") {
+    ok(await sb()!.from("membres").update({ mot_de_passe: hache }).eq("id", membreId));
+    return;
+  }
   await ecrire((b) => {
     const m = b.membres.find((x) => x.id === membreId);
     if (!m) throw new Error("Membre introuvable");
@@ -124,9 +235,15 @@ const hacher = (s: string) => createHash("sha256").update(s).digest("hex");
 export async function creerJeton(membreId: string, but: Jeton["but"]): Promise<string> {
   const brut = randomBytes(32).toString("base64url");
   const duree = but === "confirmer" ? 48 * 3600e3 : 30 * 60e3; // 48 h pour confirmer le courriel, 30 min pour changer le mot de passe
+  const jeton: Jeton = { hash: hacher(brut), membreId, but, expire: new Date(Date.now() + duree).toISOString(), utilise: false };
+  if (moteur() === "supabase") {
+    ok(await sb()!.from("jetons").delete().or(`utilise.eq.true,expire.lt.${maintenant()}`));
+    ok(await sb()!.from("jetons").insert({ hash: jeton.hash, membre_id: membreId, but, expire: jeton.expire }));
+    return brut;
+  }
   await ecrire((b) => {
     b.jetons = b.jetons.filter((j) => !j.utilise && new Date(j.expire) > new Date());
-    b.jetons.push({ hash: hacher(brut), membreId, but, expire: new Date(Date.now() + duree).toISOString(), utilise: false });
+    b.jetons.push(jeton);
   });
   return brut;
 }
@@ -134,15 +251,32 @@ export async function creerJeton(membreId: string, but: Jeton["but"]): Promise<s
 // Consomme un jeton du bon type. Les deux confirment le courriel (le lien est arrivé dans sa boîte) ;
 // « reinitialiser » pose en plus le nouveau mot de passe, déjà haché. Null si le lien est invalide, expiré ou déjà utilisé.
 export async function consommerJeton(brut: string, but: Jeton["but"], nouveauHache?: string): Promise<Membre | null> {
+  if (but === "reinitialiser" && !nouveauHache) return null;
+  const hash = hacher(brut);
+
+  if (moteur() === "supabase") {
+    // Marquer « utilisé » seulement s'il ne l'était pas : deux clics simultanés, un seul gagne.
+    const pris = liste(await sb()!.from("jetons").update({ utilise: true })
+      .eq("hash", hash).eq("but", but).eq("utilise", false).gt("expire", maintenant()).select("membre_id"));
+    if (!pris.length) return null;
+    const membreId = pris[0].membre_id as string;
+    const changement: Ligne = { confirme: true };
+    if (but === "reinitialiser") {
+      changement.mot_de_passe = nouveauHache;
+      // Un changement de mot de passe annule les autres liens encore valides de ce membre.
+      ok(await sb()!.from("jetons").update({ utilise: true }).eq("membre_id", membreId).eq("but", "reinitialiser"));
+    }
+    const r = ok(await sb()!.from("membres").update(changement).eq("id", membreId).select("*").maybeSingle());
+    return r ? membreDe(r) : null;
+  }
+
   return ecrire((b) => {
-    const j = b.jetons.find((x) => x.hash === hacher(brut));
+    const j = b.jetons.find((x) => x.hash === hash);
     if (!j || j.but !== but || j.utilise || new Date(j.expire) < new Date()) return null;
     const m = b.membres.find((x) => x.id === j.membreId);
     if (!m) return null;
     if (but === "reinitialiser") {
-      if (!nouveauHache) return null;
-      m.motDePasse = nouveauHache;
-      // Un changement de mot de passe annule les autres liens encore valides de ce membre.
+      m.motDePasse = nouveauHache!;
       b.jetons.filter((x) => x.membreId === m.id && x.but === "reinitialiser").forEach((x) => (x.utilise = true));
     }
     j.utilise = true;
@@ -151,21 +285,66 @@ export async function consommerJeton(brut: string, but: Jeton["but"], nouveauHac
   });
 }
 
+// ---------- Essais de connexion ratés : 5, puis 15 minutes de blocage ----------
+
+const MAX_ESSAIS = 5;
+const BLOCAGE = 15 * 60e3;
+const essais = new Map<string, { n: number; jusqua: number }>(); // moteur fichier
+
+export async function estBloque(courriel: string): Promise<boolean> {
+  if (moteur() === "supabase") {
+    const r = ok(await sb()!.from("tentatives").select("n, jusqua").eq("courriel", courriel).maybeSingle());
+    return !!r && (r.n as number) >= MAX_ESSAIS && new Date(r.jusqua as string) > new Date();
+  }
+  const e = essais.get(courriel);
+  return !!e && e.n >= MAX_ESSAIS && e.jusqua > Date.now();
+}
+
+export async function noterEchec(courriel: string): Promise<void> {
+  const jusqua = Date.now() + BLOCAGE;
+  if (moteur() === "supabase") {
+    const r = ok(await sb()!.from("tentatives").select("n, jusqua").eq("courriel", courriel).maybeSingle());
+    const n = r && new Date(r.jusqua as string) > new Date() ? (r.n as number) + 1 : 1;
+    ok(await sb()!.from("tentatives").upsert({ courriel, n, jusqua: new Date(jusqua).toISOString() }));
+    return;
+  }
+  const e = essais.get(courriel);
+  essais.set(courriel, { n: e && e.jusqua > Date.now() ? e.n + 1 : 1, jusqua });
+}
+
+export async function effacerEchecs(courriel: string): Promise<void> {
+  if (moteur() === "supabase") {
+    ok(await sb()!.from("tentatives").delete().eq("courriel", courriel));
+    return;
+  }
+  essais.delete(courriel);
+}
+
 // ---------- Références : côté membre (toujours le membre de la session) ----------
 
 export async function referencesDuMembre(membreId: string): Promise<Reference[]> {
+  if (moteur() === "supabase") {
+    return liste(await sb()!.from("refs").select("*").eq("membre_id", membreId).order("cree_le", { ascending: false })).map(refDe);
+  }
   return (await lire()).references
     .filter((r) => r.membreId === membreId)
     .sort((a, b) => b.creeLe.localeCompare(a.creeLe));
 }
 
 export async function visitesDuMembre(membreId: string): Promise<string[]> {
+  if (moteur() === "supabase") {
+    return liste(await sb()!.from("visites").select("le").eq("membre_id", membreId)).map((v) => v.le as string);
+  }
   return (await lire()).visites.filter((v) => v.membreId === membreId).map((v) => v.le);
 }
 
 // ---------- Page publique du lien ----------
 
 export async function ajouterVisite(membreId: string): Promise<void> {
+  if (moteur() === "supabase") {
+    ok(await sb()!.from("visites").insert({ membre_id: membreId }));
+    return;
+  }
   await ecrire((b) => { b.visites.push({ membreId, le: maintenant() }); });
 }
 
@@ -173,20 +352,40 @@ export type NouvelleDemande = Pick<Reference, "entreprise" | "contact" | "metier
 
 // Le premier qui réfère gagne : une entreprise déjà référée (même cellulaire) dans les 6 derniers mois reste au premier.
 // Se référer soi-même ne compte pas. Dans les deux cas, la demande est gardée, mais fermée avec sa raison.
+function raisonFermeture(membre: Membre, d: NouvelleDemande, deja: { membreId: string } | undefined): string | null {
+  const soiMeme = normaliserCellulaire(membre.cellulaire) === normaliserCellulaire(d.cellulaire)
+    || (!!d.courriel && normaliserCourriel(d.courriel) === membre.courriel);
+  if (soiMeme) return "Le membre s'est référé lui-même";
+  if (deja) return deja.membreId === membre.id ? "Déjà référée par ce membre" : "Déjà référée par un autre membre";
+  return null;
+}
+
 export async function creerReference(membreId: string, d: NouvelleDemande): Promise<Reference> {
+  const cell = normaliserCellulaire(d.cellulaire);
+  const limite = new Date();
+  limite.setMonth(limite.getMonth() - VALIDITE_MOIS);
+  const historique = (fermee: string | null): Evenement[] =>
+    [{ le: maintenant(), quoi: fermee ? `Demande reçue, fermée : ${fermee}` : "Demande reçue par le lien" }];
+
+  if (moteur() === "supabase") {
+    const membre = await membreParId(membreId);
+    if (!membre?.confirme) throw new Error("Lien inactif");
+    const deja = liste(await sb()!.from("refs").select("membre_id").eq("cellulaire_norm", cell).is("fermee", null)
+      .gt("cree_le", limite.toISOString()).order("cree_le").limit(1))[0];
+    const fermee = raisonFermeture(membre, d, deja ? { membreId: deja.membre_id as string } : undefined);
+    const r = ok(await sb()!.from("refs").insert({
+      membre_id: membreId, entreprise: d.entreprise, contact: d.contact, metier: d.metier, cellulaire: d.cellulaire,
+      cellulaire_norm: cell, courriel: d.courriel, casse_tete: d.casseTete, moment: d.moment, fermee, historique: historique(fermee),
+    }).select("*").single());
+    return refDe(r);
+  }
+
   return ecrire((b) => {
     const membre = b.membres.find((m) => m.id === membreId && m.confirme);
     if (!membre) throw new Error("Lien inactif");
-    const cell = normaliserCellulaire(d.cellulaire);
-    const limite = new Date();
-    limite.setMonth(limite.getMonth() - VALIDITE_MOIS);
     const deja = b.references.find((r) => !r.fermee && normaliserCellulaire(r.cellulaire) === cell && new Date(r.creeLe) > limite);
-    const soiMeme = normaliserCellulaire(membre.cellulaire) === cell || (d.courriel && normaliserCourriel(d.courriel) === membre.courriel);
-    const fermee = soiMeme ? "Le membre s'est référé lui-même" : deja ? (deja.membreId === membreId ? "Déjà référée par ce membre" : "Déjà référée par un autre membre") : null;
-    const r: Reference = {
-      id: randomUUID(), membreId, ...d, creeLe: maintenant(), etape: 1, fermee, notes: "",
-      historique: [{ le: maintenant(), quoi: fermee ? `Demande reçue, fermée : ${fermee}` : "Demande reçue par le lien" }],
-    };
+    const fermee = raisonFermeture(membre, d, deja);
+    const r: Reference = { id: randomUUID(), membreId, ...d, creeLe: maintenant(), etape: 1, fermee, notes: "", historique: historique(fermee) };
     b.references.push(r);
     return r;
   });
@@ -195,28 +394,58 @@ export async function creerReference(membreId: string, d: NouvelleDemande): Prom
 // ---------- Console d'admin (après exigerAdmin() seulement) ----------
 
 export async function adminTout(): Promise<Pick<Base, "membres" | "references" | "visites">> {
+  if (moteur() === "supabase") {
+    const [m, r, v] = await Promise.all([
+      sb()!.from("membres").select("*"),
+      sb()!.from("refs").select("*"),
+      sb()!.from("visites").select("membre_id, le"),
+    ]);
+    return {
+      membres: liste(m).map(membreDe),
+      references: liste(r).map(refDe),
+      visites: liste(v).map((x) => ({ membreId: x.membre_id as string, le: x.le as string })),
+    };
+  }
   const { membres, references, visites } = await lire();
   return { membres, references, visites };
 }
 
 export async function adminMajReference(id: string, d: { etape?: number; fermee?: string | null; notes?: string; quoi?: string }): Promise<Reference | null> {
-  return ecrire((b) => {
-    const r = b.references.find((x) => x.id === id);
-    if (!r) return null;
+  const appliquer = (r: Reference) => {
     if (d.etape !== undefined && d.etape >= 1 && d.etape <= 6) r.etape = d.etape;
     if (d.fermee !== undefined) r.fermee = d.fermee;
     if (d.notes !== undefined) r.notes = d.notes;
     if (d.quoi) r.historique.push({ le: maintenant(), quoi: d.quoi });
     return r;
+  };
+  if (moteur() === "supabase") {
+    const ligne = ok(await sb()!.from("refs").select("*").eq("id", id).maybeSingle());
+    if (!ligne) return null;
+    const r = appliquer(refDe(ligne));
+    ok(await sb()!.from("refs").update({ etape: r.etape, fermee: r.fermee, notes: r.notes, historique: r.historique }).eq("id", id));
+    return r;
+  }
+  return ecrire((b) => {
+    const r = b.references.find((x) => x.id === id);
+    return r ? appliquer(r) : null;
   });
 }
 
-// ---------- Courriels de la boîte locale ----------
+// ---------- Boîte locale des courriels (ordinateur, sans Resend) : toujours un fichier ----------
+
+const BOITE = path.join(DOSSIER, "courriels.json");
 
 export async function garderCourrielLocal(c: Omit<CourrielLocal, "le">): Promise<void> {
-  await ecrire((b) => { b.courriels.unshift({ ...c, le: maintenant() }); b.courriels = b.courriels.slice(0, 50); });
+  const liste = await courrielsLocaux();
+  liste.unshift({ ...c, le: maintenant() });
+  await fs.mkdir(DOSSIER, { recursive: true });
+  await fs.writeFile(BOITE, JSON.stringify(liste.slice(0, 50), null, 2));
 }
 
 export async function courrielsLocaux(): Promise<CourrielLocal[]> {
-  return (await lire()).courriels;
+  try {
+    return JSON.parse(await fs.readFile(BOITE, "utf8"));
+  } catch {
+    return [];
+  }
 }

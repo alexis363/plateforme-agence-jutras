@@ -1,8 +1,9 @@
 import { z } from "zod";
-import { membreParCourriel, creerJeton, normaliserCourriel } from "@/lib/depot.ts";
+import { membreParCourriel, creerJeton, normaliserCourriel, estBloque, noterEchec, effacerEchecs } from "@/lib/depot.ts";
 import { envoyerCourriel, adresseApp } from "@/lib/courriel.ts";
 import { ouvrirSession, estCourrielAdmin } from "@/lib/session.ts";
-import { verifierMotDePasse, estBloque, noterEchec, effacerEchecs } from "@/lib/motdepasse.ts";
+import { verifierMotDePasse } from "@/lib/motdepasse.ts";
+import { amorcerAdmin } from "@/lib/amorce.ts";
 
 const MAUVAIS = "Courriel ou mot de passe incorrect.";
 
@@ -12,15 +13,25 @@ export async function POST(req: Request) {
   if (!d.success) return Response.json({ erreur: MAUVAIS }, { status: 400 });
   const courriel = normaliserCourriel(d.data.courriel);
 
-  if (estBloque(courriel)) return Response.json({ erreur: "Trop d'essais. Réessayez dans 15 minutes, ou choisissez « Mot de passe oublié »." }, { status: 429 });
+  if (await estBloque(courriel)) return Response.json({ erreur: "Trop d'essais. Réessayez dans 15 minutes, ou choisissez « Mot de passe oublié »." }, { status: 429 });
 
   const m = await membreParCourriel(courriel);
+
+  // Première connexion d'Alexis : son compte admin se crée à partir des réglages (lib/amorce.ts).
+  if (!m) {
+    const admin = await amorcerAdmin(courriel, d.data.motDePasse);
+    if (admin) {
+      await ouvrirSession(admin);
+      return Response.json({ vers: "/admin" });
+    }
+  }
+
   const bon = await verifierMotDePasse(d.data.motDePasse, m?.motDePasse ?? null);
   if (!m || !bon) {
-    noterEchec(courriel);
+    await noterEchec(courriel);
     return Response.json({ erreur: MAUVAIS }, { status: 401 });
   }
-  effacerEchecs(courriel);
+  await effacerEchecs(courriel);
 
   // Bon mot de passe, mais courriel jamais confirmé : on renvoie le lien de confirmation.
   if (!m.confirme) {

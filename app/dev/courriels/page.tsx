@@ -1,12 +1,12 @@
 import { notFound } from "next/navigation";
-import { estLocal, courrielsLocaux } from "@/lib/depot.ts";
+import { boiteLocale, courrielsLocaux } from "@/lib/depot.ts";
 import { dateLongue } from "@/lib/regles.ts";
 
 export const dynamic = "force-dynamic";
 
 // La boîte locale : les courriels que l'application enverrait. N'existe jamais en ligne.
 export default async function BoiteLocale() {
-  if (!estLocal()) notFound();
+  if (!boiteLocale()) notFound();
   const courriels = await courrielsLocaux();
   return (
     <main style={{ maxWidth: 760, margin: "0 auto" }}>

@@ -1,4 +1,5 @@
 // Mots de passe : hachés avec scrypt et un sel propre à chaque membre. Le mot de passe lui-même n'est jamais gardé.
+// Le blocage après 5 essais ratés est dans lib/depot.ts (estBloque, noterEchec, effacerEchecs) : il vit dans la base.
 import { scrypt, randomBytes, timingSafeEqual } from "node:crypto";
 
 export const LONGUEUR_MIN = 10;
@@ -18,23 +19,4 @@ export async function verifierMotDePasse(motDePasse: string, garde: string | nul
   const calcule = await deriver(motDePasse, Buffer.from(sel, "base64"));
   const a = Buffer.from(attendu, "base64");
   return garde !== null && a.length === calcule.length && timingSafeEqual(a, calcule);
-}
-
-// Trop d'essais ratés sur un courriel : bloqué 15 minutes. En mémoire du serveur ; à revoir en ligne (plusieurs serveurs).
-const essais = new Map<string, { n: number; jusqua: number }>();
-const MAX = 5;
-
-export function estBloque(courriel: string): boolean {
-  const e = essais.get(courriel);
-  return !!e && e.n >= MAX && e.jusqua > Date.now();
-}
-
-export function noterEchec(courriel: string): void {
-  const e = essais.get(courriel);
-  const n = e && e.jusqua > Date.now() ? e.n + 1 : 1;
-  essais.set(courriel, { n, jusqua: Date.now() + 15 * 60e3 });
-}
-
-export function effacerEchecs(courriel: string): void {
-  essais.delete(courriel);
 }
