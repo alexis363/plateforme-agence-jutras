@@ -10,6 +10,8 @@ const CSP = [
   "font-src 'self' https://fonts.gstatic.com",
   "img-src 'self' data:",
   "connect-src 'self'",
+  // La page de réservation Google d'Alexis, affichée dans la page d'un lien de référence.
+  "frame-src https://calendar.google.com",
   "frame-ancestors 'none'",
   "object-src 'none'",
   "base-uri 'self'",

@@ -1,35 +1,20 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
-const PLAGES = ["Avant-midi", "Midi", "Fin de journée", "Soirée"];
-const JOURS = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
-const MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+// La page de réservation Google d'Alexis, la même que sur le site (agencejutras.com, section contact).
+const AGENDA = "https://calendar.google.com/calendar/appointments/schedules/AcZssZ2rf0pkYJiDEFPNuvUroU_E617grZ2-LitCoBvRcUXLQ-f_Olx2UAg9QTdR7Oy-3pzrp2rNwExM?gv=true";
+const AGENDA_ONGLET = "https://calendar.app.google/4XiSMLPryGaq8Hou8";
 
-// Les 5 prochains jours de semaine, à partir de demain.
-function prochainsJours(): Date[] {
-  const jours: Date[] = [];
-  const d = new Date();
-  while (jours.length < 5) {
-    d.setDate(d.getDate() + 1);
-    if (d.getDay() !== 0 && d.getDay() !== 6) jours.push(new Date(d));
-  }
-  return jours;
-}
-
+// Deux temps : 1. l'entrepreneur se présente (la demande est attribuée au membre, même s'il ne réserve pas) ;
+// 2. il choisit sa plage dans l'agenda Google, qui envoie lui-même la confirmation.
 export default function FormulaireRdv({ slug, qui }: { slug: string; qui: string | null }) {
-  const jours = useMemo(prochainsJours, []);
-  const [jour, setJour] = useState(0);
-  const [plage, setPlage] = useState<number | null>(null);
   const [erreur, setErreur] = useState("");
   const [occupe, setOccupe] = useState(false);
-  const [fait, setFait] = useState("");
+  const [prenom, setPrenom] = useState<string | null>(null);
 
   async function envoyer(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (plage === null) return setErreur("Choisissez un moment de la journée.");
     const f = new FormData(e.currentTarget);
-    const d = jours[jour];
-    const moment = `${["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"][d.getDay()]} ${d.getDate()} ${MOIS[d.getMonth()]}, ${PLAGES[plage].toLowerCase()}`;
     setOccupe(true);
     setErreur("");
     const rep = await fetch(`/api/r/${encodeURIComponent(slug)}/demande`, {
@@ -37,41 +22,31 @@ export default function FormulaireRdv({ slug, qui }: { slug: string; qui: string
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         contact: f.get("contact"), entreprise: f.get("entreprise"), metier: f.get("metier"),
-        cellulaire: f.get("cellulaire"), courriel: f.get("courriel") ?? "", casseTete: f.get("casseTete") ?? "", moment,
+        cellulaire: f.get("cellulaire"), courriel: f.get("courriel") ?? "", casseTete: f.get("casseTete") ?? "",
+        moment: "Plage choisie dans l'agenda Google",
       }),
     });
     setOccupe(false);
-    if (rep.ok) setFait(moment);
+    if (rep.ok) setPrenom(String(f.get("contact")).trim().split(/\s+/)[0] || "");
     else setErreur((await rep.json().catch(() => ({}))).erreur ?? "Une erreur est survenue. Appelez-moi au 581-349-1258.");
   }
 
-  if (fait)
+  if (prenom !== null)
     return (
-      <div className="formrdv"><div className="merci">
-        <div className="rond">✓</div>
-        <h3>C'est noté.</h3>
-        <p style={{ color: "var(--sec)" }}>Je vous appelle {fait}.</p>
-        <p style={{ color: "var(--sec)", fontSize: 14 }}>Si le moment ne convient plus, écrivez-moi au 581-349-1258.</p>
-      </div></div>
+      <div className="formrdv">
+        <span className="reco-tag">✓ Étape 1 faite{qui ? ` · recommandé par ${qui}` : ""}</span>
+        <h3>Merci{prenom ? ` ${prenom}` : ""}. Choisissez votre plage.</h3>
+        <p className="s">Mes disponibilités, en direct. Vous recevez la confirmation par courriel, et je vous appelle à l'heure choisie.</p>
+        <iframe className="agenda" src={AGENDA} title="Choisir une plage de 15 minutes avec Alexis Jutras" />
+        <p className="legal">L'agenda ne s'affiche pas? <a href={AGENDA_ONGLET} target="_blank" rel="noopener">Ouvrez-le dans un nouvel onglet</a>, ou écrivez-moi au 581-349-1258.</p>
+      </div>
     );
 
   return (
     <form className="formrdv" onSubmit={envoyer}>
       {qui && <span className="reco-tag">✓ Recommandé par {qui}</span>}
       <h3>Réservez vos 15 minutes</h3>
-      <p className="s">Choisissez le moment qui vous convient : je vous appelle.</p>
-      <div className="jours">
-        {jours.map((d, i) => (
-          <button type="button" key={i} className={`jour${i === jour ? " actif" : ""}`} onClick={() => setJour(i)}>
-            <small>{JOURS[d.getDay()]}</small><b>{d.getDate()}</b>
-          </button>
-        ))}
-      </div>
-      <div className="heures">
-        {PLAGES.map((p, i) => (
-          <button type="button" key={p} className={`heure${i === plage ? " actif" : ""}`} onClick={() => { setPlage(i); setErreur(""); }}>{p}</button>
-        ))}
-      </div>
+      <p className="s">Étape 1 sur 2 : présentez-vous. À l'étape 2, vous choisissez votre plage dans mon agenda.</p>
       <div className="champs">
         <label className="champ"><span>Prénom et nom</span><input name="contact" required maxLength={80} placeholder="Martin Roy" /></label>
         <label className="champ"><span>Entreprise</span><input name="entreprise" required maxLength={80} placeholder="Paysagement Roy" /></label>
@@ -80,7 +55,7 @@ export default function FormulaireRdv({ slug, qui }: { slug: string; qui: string
         <label className="champ large"><span>Courriel (facultatif)</span><input name="courriel" type="email" maxLength={120} /></label>
         <label className="champ large"><span>Votre plus gros casse-tête administratif</span><textarea name="casseTete" maxLength={600} placeholder="Les soumissions le soir, les demandes éparpillées…" /></label>
       </div>
-      <button className="btn" disabled={occupe}>{occupe ? "Envoi…" : <>Réserver mes 15 minutes <span aria-hidden="true">→</span></>}</button>
+      <button className="btn" disabled={occupe}>{occupe ? "Envoi…" : <>Voir mes disponibilités <span aria-hidden="true">→</span></>}</button>
       <p className="erreur" role="alert">{erreur}</p>
       <p className="legal">Vos renseignements servent seulement à préparer notre appel.{qui ? ` Votre demande est attribuée à ${qui}, qui vous a recommandé.` : ""} <a href="https://www.agencejutras.com/politique-de-confidentialite.html">Politique de confidentialité</a>.</p>
     </form>
