@@ -36,8 +36,13 @@ export async function envoyerCourriel(c: { a: string; sujet: string; texte: stri
 }
 
 // L'adresse de l'application (liens dans les courriels) et l'adresse publique des liens de référence.
+// Jamais tirée de la requête : un en-tête « Host » trafiqué ferait partir un lien de connexion vers un autre site.
+// Ordre : APP_URL ; sinon, sur Vercel, l'adresse de production du projet ; sinon l'ordinateur.
 export function adresseApp(): string {
-  return process.env.APP_URL ?? "http://localhost:3100";
+  if (process.env.APP_URL) return process.env.APP_URL.replace(/\/$/, "");
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  if (process.env.VERCEL) throw new Error("APP_URL manquant : impossible de faire un lien vers la plateforme");
+  return "http://localhost:3100";
 }
 
 export function lienReference(slug: string): { url: string; affiche: string } {
