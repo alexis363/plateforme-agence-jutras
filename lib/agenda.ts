@@ -9,7 +9,6 @@
 export const FUSEAU = "America/Toronto"; // l'heure de Québec
 export const DUREE_MIN = 15;
 export const PREAVIS_H = 12;
-const HORIZON_JOURS = 14;
 
 // Les disponibilités d'Alexis au 18 nov. 2026 (0 = dimanche … 6 = samedi), en heures de Québec.
 // Vendredi, samedi et dimanche : aucune plage.
@@ -75,7 +74,11 @@ function plagesTheoriques(maintenant = Date.now()): { debut: number; jourCle: st
   const auj = enQuebec(maintenant);
   const premier = maintenant + PREAVIS_H * 3600e3;
   const sortie = [];
-  for (let i = 0; i <= HORIZON_JOURS; i++) {
+  // Cette semaine et la semaine prochaine seulement (décision d'Alexis du 18 nov. 2026) : jusqu'au dimanche
+  // de la semaine prochaine, la semaine allant du lundi au dimanche.
+  const jourSemaine = new Date(Date.UTC(auj.a, auj.m - 1, auj.j)).getUTCDay();
+  const horizon = ((7 - jourSemaine) % 7) + 7;
+  for (let i = 0; i <= horizon; i++) {
     const d = new Date(Date.UTC(auj.a, auj.m - 1, auj.j + i));
     const [a, m, j] = [d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate()];
     for (const [de, a2] of DISPONIBILITES[d.getUTCDay()] ?? []) {
@@ -143,7 +146,7 @@ async function occupe(de: number, a: number): Promise<{ debut: number; fin: numb
 const chevauche = (debut: number, pris: { debut: number; fin: number }[]) =>
   pris.some((p) => debut < p.fin && debut + DUREE_MIN * 60e3 > p.debut);
 
-// Les plages libres des 14 prochains jours, regroupées par jour.
+// Les plages libres de cette semaine et de la suivante, regroupées par jour.
 export async function plagesLibres(): Promise<JourDePlages[]> {
   const toutes = plagesTheoriques();
   if (!toutes.length) return [];
@@ -165,7 +168,8 @@ export async function plageEncoreLibre(debutIso: string): Promise<boolean> {
   return !chevauche(debut, await occupe(debut, debut + DUREE_MIN * 60e3));
 }
 
-export type Rdv = { debut: string; entreprise: string; contact: string; metier: string; cellulaire: string; courriel: string; casseTete: string; ambassadeur: string };
+// ambassadeur : le membre qui a référé, ou null pour un rendez-vous pris sur le site web.
+export type Rdv = { debut: string; entreprise: string; contact: string; metier: string; cellulaire: string; courriel: string; casseTete: string; ambassadeur: string | null };
 
 // Crée le rendez-vous dans l'agenda d'Alexis ; Google envoie l'invitation à l'entrepreneur s'il a laissé un courriel.
 // Retourne l'identifiant de l'événement (null en agenda simulé).
@@ -173,18 +177,20 @@ export async function creerRendezVous(r: Rdv): Promise<string | null> {
   if (!googleConfigure()) return null;
   const debut = Date.parse(r.debut);
   const description = [
-    `Recommandé par : ${r.ambassadeur}`,
+    r.ambassadeur ? `Recommandé par : ${r.ambassadeur}` : "Pris sur le site agencejutras.com",
     `Entreprise : ${r.entreprise} (${r.metier})`,
     `Contact : ${r.contact}, ${r.cellulaire}`,
     r.casseTete ? `Son plus gros casse-tête : ${r.casseTete}` : "",
     "",
-    "Alexis vous appelle au numéro ci-dessus. Pris par le programme de référence de l'Agence Jutras.",
+    r.ambassadeur
+      ? "Alexis vous appelle au numéro ci-dessus. Pris par le programme de référence de l'Agence Jutras."
+      : "Alexis vous appelle au numéro ci-dessus.",
   ].filter((l, i, t) => l || i === t.length - 2).join("\n");
   const rep = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${calendrier()}/events?sendUpdates=all`, {
     method: "POST",
     headers: { Authorization: `Bearer ${await jetonGoogle()}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      summary: `Appel 15 min · Kairos · ${r.entreprise}`,
+      summary: r.ambassadeur ? `Appel 15 min · Kairos · ${r.entreprise}` : `Appel 15 min · Agence Jutras · ${r.entreprise}`,
       description,
       start: { dateTime: new Date(debut).toISOString(), timeZone: FUSEAU },
       end: { dateTime: new Date(debut + DUREE_MIN * 60e3).toISOString(), timeZone: FUSEAU },

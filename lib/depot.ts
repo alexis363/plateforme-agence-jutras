@@ -10,12 +10,12 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { randomUUID, createHash, randomBytes } from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import type { Base, Membre, Reference, Jeton, CourrielLocal, Evenement } from "./types.ts";
+import type { Base, Membre, Reference, RdvSite, Jeton, CourrielLocal, Evenement } from "./types.ts";
 import { VALIDITE_MOIS } from "./regles.ts";
 
 const DOSSIER = path.join(process.cwd(), ".donnees");
 const FICHIER = path.join(DOSSIER, "base.json");
-const VIDE: Base = { membres: [], references: [], visites: [], jetons: [], courriels: [] };
+const VIDE: Base = { membres: [], references: [], rdvSite: [], visites: [], jetons: [], courriels: [] };
 
 // Sur l'ordinateur, sans Supabase : le fichier local.
 export function estLocal(): boolean {
@@ -94,6 +94,13 @@ const refDe = (r: Ligne): Reference => ({
   casseTete: r.casse_tete as string, moment: r.moment as string, rendezVous: (r.rendez_vous as string) ?? null,
   evenementId: (r.evenement_id as string) ?? null, creeLe: r.cree_le as string, etape: r.etape as number,
   fermee: (r.fermee as string) ?? null, notes: r.notes as string, historique: (r.historique as Evenement[]) ?? [],
+});
+
+const rdvSiteDe = (r: Ligne): RdvSite => ({
+  id: r.id as string, entreprise: r.entreprise as string, contact: r.contact as string, metier: r.metier as string,
+  cellulaire: r.cellulaire as string, courriel: r.courriel as string, casseTete: r.casse_tete as string,
+  moment: r.moment as string, rendezVous: (r.rendez_vous as string) ?? null, evenementId: (r.evenement_id as string) ?? null,
+  creeLe: r.cree_le as string,
 });
 
 const maintenant = () => new Date().toISOString();
@@ -399,28 +406,54 @@ export async function creerReference(membreId: string, d: NouvelleDemande): Prom
 // Google Agenda ne les montre pas encore. Seulement des heures : rien sur qui les a pris.
 export async function rendezVousPris(apres: string): Promise<string[]> {
   if (moteur() === "supabase") {
-    return liste(await sb()!.from("refs").select("rendez_vous").gte("rendez_vous", apres)).map((r) => r.rendez_vous as string);
+    const [r, s] = await Promise.all([
+      sb()!.from("refs").select("rendez_vous").gte("rendez_vous", apres),
+      sb()!.from("rdv_site").select("rendez_vous").gte("rendez_vous", apres),
+    ]);
+    // Tant que la table rdv_site n'existe pas (migration du 18 nov. 2026 pas encore exécutée), les liens de
+    // référence continuent de marcher : seuls leurs rendez-vous comptent.
+    if (s.error) console.error(`rdv_site : ${s.error.message}`);
+    return [...liste(r), ...(s.data ?? [])].map((x) => x.rendez_vous as string);
   }
-  return (await lire()).references.filter((r) => r.rendezVous && r.rendezVous >= apres).map((r) => r.rendezVous!);
+  const b = await lire();
+  return [...b.references, ...b.rdvSite].filter((r) => r.rendezVous && r.rendezVous >= apres).map((r) => r.rendezVous!);
+}
+
+// ---------- Rendez-vous pris sur le site web (sans lien de référence) ----------
+
+export async function creerRdvSite(d: Omit<RdvSite, "id" | "creeLe">): Promise<RdvSite> {
+  if (moteur() === "supabase") {
+    return rdvSiteDe(ok(await sb()!.from("rdv_site").insert({
+      entreprise: d.entreprise, contact: d.contact, metier: d.metier, cellulaire: d.cellulaire, courriel: d.courriel,
+      casse_tete: d.casseTete, moment: d.moment, rendez_vous: d.rendezVous, evenement_id: d.evenementId,
+    }).select("*").single()) as Ligne);
+  }
+  return ecrire((b) => {
+    const r: RdvSite = { id: randomUUID(), ...d, creeLe: maintenant() };
+    b.rdvSite.push(r);
+    return r;
+  });
 }
 
 // ---------- Console d'admin (après exigerAdmin() seulement) ----------
 
-export async function adminTout(): Promise<Pick<Base, "membres" | "references" | "visites">> {
+export async function adminTout(): Promise<Pick<Base, "membres" | "references" | "rdvSite" | "visites">> {
   if (moteur() === "supabase") {
-    const [m, r, v] = await Promise.all([
+    const [m, r, s, v] = await Promise.all([
       sb()!.from("membres").select("*"),
       sb()!.from("refs").select("*"),
+      sb()!.from("rdv_site").select("*").gte("cree_le", new Date(Date.now() - 30 * 86400e3).toISOString()),
       sb()!.from("visites").select("membre_id, le"),
     ]);
     return {
       membres: liste(m).map(membreDe),
       references: liste(r).map(refDe),
+      rdvSite: liste(s).map(rdvSiteDe),
       visites: liste(v).map((x) => ({ membreId: x.membre_id as string, le: x.le as string })),
     };
   }
-  const { membres, references, visites } = await lire();
-  return { membres, references, visites };
+  const { membres, references, rdvSite, visites } = await lire();
+  return { membres, references, rdvSite, visites };
 }
 
 export async function adminMajReference(id: string, d: { etape?: number; fermee?: string | null; notes?: string; quoi?: string }): Promise<Reference | null> {

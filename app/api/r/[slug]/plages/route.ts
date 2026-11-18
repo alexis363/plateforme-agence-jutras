@@ -1,7 +1,7 @@
 import { membrePublic } from "@/lib/depot.ts";
 import { plagesLibres } from "@/lib/agenda.ts";
 
-// Les plages libres d'Alexis pour les 14 prochains jours. Rien de privé : seulement des heures libres.
+// Les plages libres d'Alexis, cette semaine et la suivante. Rien de privé : seulement des heures libres.
 export async function GET(_req: Request, { params }: { params: Promise<{ slug: string }> }) {
   if (!(await membrePublic((await params).slug))) return Response.json({ erreur: "Ce lien n'est pas actif." }, { status: 404 });
   try {

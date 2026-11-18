@@ -38,6 +38,21 @@ export type Reference = {
 
 export type Visite = { membreId: string; le: string };
 
+// Un rendez-vous de 15 minutes pris sur le site web (agencejutras.com), sans lien de référence.
+export type RdvSite = {
+  id: string;
+  entreprise: string;
+  contact: string;
+  metier: string;
+  cellulaire: string;
+  courriel: string;
+  casseTete: string;
+  moment: string; // en texte, ou ce qui en tient lieu
+  rendezVous: string | null;
+  evenementId: string | null;
+  creeLe: string;
+};
+
 export type Jeton = {
   hash: string;
   membreId: string;
@@ -51,6 +66,7 @@ export type CourrielLocal = { a: string; sujet: string; texte: string; lien: str
 export type Base = {
   membres: Membre[];
   references: Reference[];
+  rdvSite: RdvSite[];
   visites: Visite[];
   jetons: Jeton[];
   courriels: CourrielLocal[]; // boîte locale, sur l'ordinateur seulement

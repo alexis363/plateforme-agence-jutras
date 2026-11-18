@@ -6,12 +6,17 @@ import { momentCourt } from "@/lib/agenda.ts";
 
 export default async function Aujourdhui() {
   const admin = await exigerAdmin();
-  const { membres, references } = await adminTout();
+  const { membres, references, rdvSite } = await adminTout();
   const nom = (id: string) => membres.find((m) => m.id === id);
   const actives = references.filter((r) => !r.fermee);
   const aAppeler = actives.filter((r) => r.etape === 1).sort((a, b) => (a.rendezVous ?? a.creeLe).localeCompare(b.rendezVous ?? b.creeLe));
   const aVerser = actives.filter((r) => r.etape === 5);
   const semaine = Date.now() - 7 * 86400e3;
+  // Les rendez-vous pris sur le site web : ceux à venir (ou d'aujourd'hui), et les demandes sans plage de la semaine.
+  const hier = new Date(Date.now() - 86400e3).toISOString();
+  const duSite = rdvSite
+    .filter((r) => (r.rendezVous ? r.rendezVous >= hier : new Date(r.creeLe).getTime() > semaine))
+    .sort((a, b) => (a.rendezVous ?? a.creeLe).localeCompare(b.rendezVous ?? b.creeLe));
   const nouveauxMembres = membres.filter((m) => m.confirme && m.role === "membre" && new Date(m.creeLe).getTime() > semaine);
 
   return (
@@ -27,11 +32,16 @@ export default async function Aujourdhui() {
       <div className="deux">
         <div className="bloc">
           <h2>À faire</h2>
-          {aAppeler.length + aVerser.length === 0 && <p className="vide">Rien à faire pour le programme de référence. Les nouvelles demandes apparaîtront ici.</p>}
+          {aAppeler.length + aVerser.length + duSite.length === 0 && <p className="vide">Rien à faire. Les nouvelles demandes (liens de référence et site web) apparaîtront ici.</p>}
           {aAppeler.map((r) => (
             <div className="tache" key={r.id}>
               <div className="t-txt"><b>Appeler {r.contact}, {r.entreprise}</b><small>{r.metier} · {r.cellulaire} · {r.rendezVous ? `rendez-vous le ${momentCourt(r.rendezVous)}` : r.moment} · référé par {nom(r.membreId)?.prenom ?? "?"}</small></div>
               <Link className="lien" href={`/admin/references/${r.id}`}>Ouvrir</Link>
+            </div>
+          ))}
+          {duSite.map((r) => (
+            <div className="tache" key={r.id}>
+              <div className="t-txt"><b>Appeler {r.contact}, {r.entreprise}</b><small>{r.metier} · {r.cellulaire} · {r.rendezVous ? `rendez-vous le ${momentCourt(r.rendezVous)}` : r.moment} · pris sur le site web{r.casseTete ? ` · « ${r.casseTete} »` : ""}</small></div>
             </div>
           ))}
           {aVerser.map((r) => {

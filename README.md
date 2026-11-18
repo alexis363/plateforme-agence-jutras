@@ -36,14 +36,22 @@ mot de passe `demonstration`. Les courriels (confirmation, mot de passe oublié)
 
 Sur la page d'un lien, l'entrepreneur remplit **un seul formulaire** : ses coordonnées et une plage de 15 minutes
 (décision d'Alexis du 18 nov. 2026). `lib/agenda.ts` calcule les plages à partir de ses disponibilités (heure de
-Québec, préavis de 12 h, 14 jours), retire ce qui est occupé dans son agenda Google et ce que la plateforme a déjà
+Québec, préavis de 12 h, cette semaine et la suivante jusqu'au dimanche), retire ce qui est occupé dans son agenda Google et ce que la plateforme a déjà
 réservé, puis crée l'événement dans l'agenda (Google envoie l'invitation). La référence garde `rendez_vous` et
 `evenement_id` ; le membre voit « Rencontre le … », la console aussi.
 
 - **Changer les disponibilités** : `DISPONIBILITES` dans `lib/agenda.ts`.
 - **Brancher l'agenda** : `GOOGLE_CLIENT_ID` et `GOOGLE_CLIENT_SECRET` dans `.env.local`, puis `npm run google`
   (une fois) ; copier les trois `GOOGLE_*` dans Vercel. Sans eux, l'agenda est simulé : rien n'est bloqué ni créé.
-- **Base existante** : exécuter `supabase/migration-2026-11-18-rendez-vous.sql` une fois.
+- **Base existante** : exécuter `supabase/migration-2026-11-18-rendez-vous.sql`, puis `supabase/migration-2026-11-18-rdv-site.sql`, une fois chacun.
+
+### Le formulaire du site web
+
+La section contact de www.agencejutras.com a le même formulaire, sans ambassadeur (demande d'Alexis du 18 nov. 2026).
+Il appelle `GET /api/rdv/plages` et `POST /api/rdv` (table `rdv_site`) ; l'adresse de la plateforme est dans
+l'attribut `data-api` du bloc `#rdv` de `index.html`. Seuls `https://www.agencejutras.com` et `https://agencejutras.com`
+peuvent l'appeler (`lib/cors.ts`) ; `SITE_ORIGINES` en ajoute d'autres pour un essai. Un champ piège invisible arrête
+les robots simples. Les rendez-vous du site apparaissent dans la console, page Aujourd'hui.
 
 ## Le compte admin
 
@@ -97,8 +105,7 @@ Le courriel est confirmé une fois, par un lien valide 48 h ; « Mot de passe ou
 3. **Variables** : `SESSION_SECRET` (32 caractères ou plus), `ADMIN_COURRIELS`, `APP_URL`, `SITE_URL`.
 4. **Les adresses** : `compte.agencejutras.com` pour l'application ; une redirection `agencejutras.com/r/*` vers l'application.
 5. **La Loi 25** : la politique de confidentialité du site doit parler du programme (noms, cellulaires, courriels Interac, témoin `aj_ref` de 90 jours).
-6. **La prise de rendez-vous** : la page demande un moment préféré ; Alexis rappelle. Pas encore relié à son agenda.
-7. Changer de mot de passe ne ferme pas encore les autres sessions ouvertes.
+6. Changer de mot de passe ne ferme pas encore les autres sessions ouvertes.
 
 ## Règles du projet
 
