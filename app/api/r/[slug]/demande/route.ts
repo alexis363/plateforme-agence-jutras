@@ -1,16 +1,6 @@
-import { z } from "zod";
 import { membrePublic, membreParId, creerReference } from "@/lib/depot.ts";
 import { plageEncoreLibre, creerRendezVous, momentTexte } from "@/lib/agenda.ts";
-
-const Schema = z.object({
-  contact: z.string().trim().min(2).max(80),
-  entreprise: z.string().trim().min(2).max(80),
-  metier: z.string().trim().min(2).max(60),
-  cellulaire: z.string().trim().regex(/^[\d\s().+-]{10,20}$/),
-  courriel: z.union([z.literal(""), z.email().max(120)]),
-  casseTete: z.string().trim().max(600),
-  debut: z.iso.datetime().optional(), // absent seulement quand aucune plage n'est libre
-});
+import { lireDemande, MESSAGE_INVALIDE } from "@/lib/demande.ts";
 
 // Un seul formulaire (exigence d'Alexis du 18 nov. 2026) : l'entrepreneur se présente ET choisit sa plage.
 // La demande est attribuée au membre du lien, et le rendez-vous est créé dans l'agenda Google d'Alexis.
@@ -18,9 +8,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
   const { slug } = await params;
   const pub = await membrePublic(slug);
   if (!pub) return Response.json({ erreur: "Ce lien n'est pas actif." }, { status: 404 });
-  const d = Schema.safeParse(await req.json().catch(() => null));
-  if (!d.success) return Response.json({ erreur: "Vérifiez vos coordonnées et choisissez une plage : le nom, l'entreprise, le métier et le cellulaire sont requis." }, { status: 400 });
-  const { debut, ...coordonnees } = d.data;
+  const d = lireDemande(await req.json().catch(() => null));
+  if (!d) return Response.json({ erreur: MESSAGE_INVALIDE }, { status: 400 });
+  const { debut, coordonnees } = d;
 
   if (!debut) {
     await creerReference(pub.id, { ...coordonnees, moment: "Aucune plage libre : à rappeler pour fixer un moment", rendezVous: null, evenementId: null });

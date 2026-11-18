@@ -1,25 +1,14 @@
-import { z } from "zod";
 import { creerRdvSite } from "@/lib/depot.ts";
 import { plageEncoreLibre, creerRendezVous, momentTexte } from "@/lib/agenda.ts";
 import { reponse, preflight } from "@/lib/cors.ts";
-
-const Schema = z.object({
-  contact: z.string().trim().min(2).max(80),
-  entreprise: z.string().trim().min(2).max(80),
-  metier: z.string().trim().min(2).max(60),
-  cellulaire: z.string().trim().regex(/^[\d\s().+-]{10,20}$/),
-  courriel: z.union([z.literal(""), z.email().max(120)]),
-  casseTete: z.string().trim().max(600),
-  debut: z.iso.datetime().optional(), // absent seulement quand aucune plage n'est libre
-  site: z.string().max(0).optional(), // champ piège invisible : un robot le remplit, une personne non
-});
+import { lireDemande, MESSAGE_INVALIDE } from "@/lib/demande.ts";
 
 // Le formulaire de réservation du site web (demande d'Alexis du 18 nov. 2026) : le même que sur les pages de
 // référence, sans ambassadeur. Le rendez-vous est créé dans l'agenda Google d'Alexis.
 export async function POST(req: Request) {
-  const d = Schema.safeParse(await req.json().catch(() => null));
-  if (!d.success) return reponse(req, { erreur: "Vérifiez vos coordonnées et choisissez une plage : le nom, l'entreprise, le métier et le cellulaire sont requis." }, 400);
-  const { debut, site: _piege, ...coordonnees } = d.data;
+  const d = lireDemande(await req.json().catch(() => null));
+  if (!d) return reponse(req, { erreur: MESSAGE_INVALIDE }, 400);
+  const { debut, coordonnees } = d;
 
   if (!debut) {
     await creerRdvSite({ ...coordonnees, moment: "Aucune plage libre : à rappeler pour fixer un moment", rendezVous: null, evenementId: null });

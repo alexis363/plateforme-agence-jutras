@@ -35,7 +35,7 @@ export default async function References({ searchParams }: { searchParams: Promi
           <tbody>
             {liste.map((r) => (
               <tr key={r.id}>
-                <td><Link href={`/admin/references/${r.id}`} style={{ textDecoration: "none" }}><b style={{ fontWeight: 500 }}>{r.entreprise}</b><br /><small style={{ color: "var(--sec)" }}>{r.contact} · {r.metier}</small></Link></td>
+                <td><Link href={`/admin/references/${r.id}`} style={{ textDecoration: "none" }}><b style={{ fontWeight: 500 }}>{r.entreprise}</b><br /><small style={{ color: "var(--sec)" }}>{r.contact}{r.metier ? ` · ${r.metier}` : ""}</small></Link></td>
                 <td>{membre(r.membreId)?.prenom} {membre(r.membreId)?.nom}</td>
                 <td>{dateCourte(r.creeLe)}</td>
                 <td>{r.fermee ? <span className="pastille p-neutre">Fermée</span> : <span className={`pastille ${r.etape === 1 || r.etape === 5 ? "p-alerte" : r.etape === 6 ? "p-ok" : "p-cours"}`}>{r.etape}. {ETAPES[r.etape - 1]}</span>}</td>

@@ -32,13 +32,13 @@ export default function FormulaireRdv({ slug, qui }: { slug: string; qui: string
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        contact: f.get("contact"), entreprise: f.get("entreprise"), metier: f.get("metier"),
+        prenom: f.get("prenom"), nom: f.get("nom"), entreprise: f.get("entreprise"),
         cellulaire: f.get("cellulaire"), courriel: f.get("courriel") ?? "", casseTete: f.get("casseTete") ?? "", debut,
       }),
     });
     const corps = await rep.json().catch(() => ({}));
     setOccupe(false);
-    if (rep.ok) return setFait({ prenom: String(f.get("contact")).trim().split(/\s+/)[0] || "", moment: corps.moment });
+    if (rep.ok) return setFait({ prenom: String(f.get("prenom")).trim(), moment: corps.moment });
     setErreur(corps.erreur ?? "Une erreur est survenue. Appelez-moi au 581-349-1258.");
     if (corps.plagePrise) chargerPlages();
   }
@@ -85,9 +85,9 @@ export default function FormulaireRdv({ slug, qui }: { slug: string; qui: string
       )}
 
       <div className="champs">
-        <label className="champ"><span>Prénom et nom</span><input name="contact" required maxLength={80} placeholder="Martin Roy" /></label>
-        <label className="champ"><span>Entreprise</span><input name="entreprise" required maxLength={80} placeholder="Paysagement Roy" /></label>
-        <label className="champ"><span>Métier</span><input name="metier" required maxLength={60} placeholder="Émondage, ramonage…" /></label>
+        <label className="champ"><span>Prénom</span><input name="prenom" required maxLength={40} autoComplete="given-name" placeholder="Martin" /></label>
+        <label className="champ"><span>Nom</span><input name="nom" required maxLength={40} autoComplete="family-name" placeholder="Roy" /></label>
+        <label className="champ"><span>Nom de votre entreprise</span><input name="entreprise" required maxLength={80} autoComplete="organization" placeholder="Paysagement Roy" /></label>
         <label className="champ"><span>Cellulaire</span><input name="cellulaire" required inputMode="tel" placeholder="418-555-0123" /></label>
         <label className="champ large"><span>Courriel (pour recevoir l'invitation)</span><input name="courriel" type="email" maxLength={120} /></label>
         <label className="champ large"><span>Votre plus gros casse-tête administratif</span><textarea name="casseTete" maxLength={600} placeholder="Les soumissions le soir, les demandes éparpillées…" /></label>

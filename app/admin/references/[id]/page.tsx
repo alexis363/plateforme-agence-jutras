@@ -20,7 +20,7 @@ export default async function FicheReference({ params }: { params: Promise<{ id:
     <>
       <Link className="retour" href="/admin/references">← Les références</Link>
       <h1 className="titre">{r.entreprise}</h1>
-      <p className="sous">{r.contact} · {r.metier} · demande du {dateLongue(r.creeLe)}{r.fermee ? ` · fermée : ${r.fermee}` : ""}</p>
+      <p className="sous">{r.contact}{r.metier ? ` · ${r.metier}` : ""} · demande du {dateLongue(r.creeLe)}{r.fermee ? ` · fermée : ${r.fermee}` : ""}</p>
       <div className="deux">
         <div className="pile">
           <div className="bloc">

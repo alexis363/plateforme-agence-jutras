@@ -178,7 +178,7 @@ export async function creerRendezVous(r: Rdv): Promise<string | null> {
   const debut = Date.parse(r.debut);
   const description = [
     r.ambassadeur ? `Recommandé par : ${r.ambassadeur}` : "Pris sur le site agencejutras.com",
-    `Entreprise : ${r.entreprise} (${r.metier})`,
+    `Entreprise : ${r.entreprise}${r.metier ? ` (${r.metier})` : ""}`,
     `Contact : ${r.contact}, ${r.cellulaire}`,
     r.casseTete ? `Son plus gros casse-tête : ${r.casseTete}` : "",
     "",

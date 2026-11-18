@@ -35,13 +35,13 @@ export default async function Aujourdhui() {
           {aAppeler.length + aVerser.length + duSite.length === 0 && <p className="vide">Rien à faire. Les nouvelles demandes (liens de référence et site web) apparaîtront ici.</p>}
           {aAppeler.map((r) => (
             <div className="tache" key={r.id}>
-              <div className="t-txt"><b>Appeler {r.contact}, {r.entreprise}</b><small>{r.metier} · {r.cellulaire} · {r.rendezVous ? `rendez-vous le ${momentCourt(r.rendezVous)}` : r.moment} · référé par {nom(r.membreId)?.prenom ?? "?"}</small></div>
+              <div className="t-txt"><b>Appeler {r.contact}, {r.entreprise}</b><small>{r.metier ? `${r.metier} · ` : ""}{r.cellulaire} · {r.rendezVous ? `rendez-vous le ${momentCourt(r.rendezVous)}` : r.moment} · référé par {nom(r.membreId)?.prenom ?? "?"}</small></div>
               <Link className="lien" href={`/admin/references/${r.id}`}>Ouvrir</Link>
             </div>
           ))}
           {duSite.map((r) => (
             <div className="tache" key={r.id}>
-              <div className="t-txt"><b>Appeler {r.contact}, {r.entreprise}</b><small>{r.metier} · {r.cellulaire} · {r.rendezVous ? `rendez-vous le ${momentCourt(r.rendezVous)}` : r.moment} · pris sur le site web{r.casseTete ? ` · « ${r.casseTete} »` : ""}</small></div>
+              <div className="t-txt"><b>Appeler {r.contact}, {r.entreprise}</b><small>{r.metier ? `${r.metier} · ` : ""}{r.cellulaire} · {r.rendezVous ? `rendez-vous le ${momentCourt(r.rendezVous)}` : r.moment} · pris sur le site web{r.casseTete ? ` · « ${r.casseTete} »` : ""}</small></div>
             </div>
           ))}
           {aVerser.map((r) => {
