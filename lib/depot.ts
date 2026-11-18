@@ -22,9 +22,9 @@ export function estLocal(): boolean {
   return process.env.COMPTE_LOCAL === "oui" && !process.env.VERCEL;
 }
 
-// La boîte locale des courriels : sur l'ordinateur, tant que Resend n'est pas branché.
+// La boîte locale des courriels : sur l'ordinateur, tant que SendGrid n'est pas branché.
 export function boiteLocale(): boolean {
-  return !process.env.VERCEL && !process.env.RESEND_API_KEY;
+  return !process.env.VERCEL && !process.env.SENDGRID_API_KEY;
 }
 
 let client: SupabaseClient | null = null;
@@ -431,7 +431,7 @@ export async function adminMajReference(id: string, d: { etape?: number; fermee?
   });
 }
 
-// ---------- Boîte locale des courriels (ordinateur, sans Resend) : toujours un fichier ----------
+// ---------- Boîte locale des courriels (ordinateur, sans SendGrid) : toujours un fichier ----------
 
 const BOITE = path.join(DOSSIER, "courriels.json");
 

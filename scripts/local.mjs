@@ -4,6 +4,6 @@
 import { spawn } from "node:child_process";
 
 spawn(process.execPath, ["node_modules/next/dist/bin/next", "dev", "-p", "3100"], {
-  env: { ...process.env, SUPABASE_URL: "", SUPABASE_SECRET_KEY: "", RESEND_API_KEY: "", COMPTE_LOCAL: "oui" },
+  env: { ...process.env, SUPABASE_URL: "", SUPABASE_SECRET_KEY: "", SENDGRID_API_KEY: "", COMPTE_LOCAL: "oui" },
   stdio: "inherit",
 });

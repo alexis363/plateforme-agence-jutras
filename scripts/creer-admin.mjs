@@ -1,5 +1,5 @@
 // Crée (ou remet à neuf) le compte admin d'Alexis directement dans la vraie base Supabase.
-// Sert tant que Resend n'est pas branché : le compte est créé déjà confirmé, sans courriel.
+// Le compte est créé déjà confirmé, sans courriel.
 //
 //   npm run creer-admin
 //

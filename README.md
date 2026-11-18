@@ -5,7 +5,7 @@ Le programme de référence et la console d'Alexis : un membre s'inscrit, confir
 référence dans la console. Bâti à partir des maquettes « Espace utilisateur » et « Console admin » (17 nov. 2026).
 
 > **Statut au 17 novembre 2026 : fonctionne sur l'ordinateur seulement**, avec un fichier de données local.
-> Avant la mise en ligne : brancher Supabase (base au Canada, séparée de Kairos) et Resend, voir « Ce qui manque ».
+> Supabase branché ; courriels par SendGrid (compte de l'Agence Jutras). Voir « Ce qui manque ».
 
 ## Démarrer sur l'ordinateur
 
@@ -29,7 +29,7 @@ mot de passe `demonstration`. Les courriels (confirmation, mot de passe oublié)
 
 1. Dans Supabase, projet de la plateforme (jamais celui de Kairos) : **SQL Editor** → coller tout `supabase/installation.sql` → **Run**.
 2. **Project Settings → API** : copier l'adresse du projet dans `SUPABASE_URL` et la **clé secrète** dans `SUPABASE_SECRET_KEY`, dans `.env.local`.
-3. `npm run supabase` : l'application tourne sur `http://localhost:3100` avec la vraie base ; les courriels restent dans la boîte locale tant que `RESEND_API_KEY` est vide.
+3. `npm run supabase` : l'application tourne sur `http://localhost:3100` avec la vraie base ; les courriels restent dans la boîte locale tant que `SENDGRID_API_KEY` est vide.
 4. `npm run test:isolation -- --supabase` : le même test, sur la vraie base. Il crée des membres « …@test.local ».
 
 ## Le compte admin
@@ -66,7 +66,7 @@ Dans `lib/regles.ts` : 100 $, Kairos seulement, 6 mois, les 6 étapes, les place
 |---|---|
 | `lib/depot.ts` | **Seul accès aux données.** Une fonction qu'un membre déclenche reçoit le membre de la session, jamais un identifiant du navigateur |
 | `lib/session.ts`, `lib/signature.ts` | Témoin de session signé (HMAC), rôle admin selon `ADMIN_COURRIELS` |
-| `lib/courriel.ts` | Boîte locale sur l'ordinateur, Resend en ligne |
+| `lib/courriel.ts` | Boîte locale sur l'ordinateur, SendGrid en ligne (sans suivi des clics) |
 | `app/compte/` | Espace du membre : lien, statistiques, références, règles, services, profil |
 | `app/r/[slug]/` | Page d'arrivée d'un lien, avec la demande de rendez-vous |
 | `app/admin/` | Console : Aujourd'hui, Références, Membres. Clients, Suivis, Avis, Factures et Soutien viennent au bloc 2 |
@@ -80,7 +80,7 @@ Le courriel est confirmé une fois, par un lien valide 48 h ; « Mot de passe ou
 
 1. ~~Supabase~~ : branché le 17 nov. 2026. Tables installées, test de sécurité passé sur la vraie base, base vide et propre.
    Il faudra copier `SUPABASE_URL` et `SUPABASE_SECRET_KEY` dans Vercel.
-2. **Resend** branché sur agencejutras.com (`RESEND_API_KEY`, `COURRIEL_EXPEDITEUR`).
+2. **SendGrid** (choix du 17 nov. 2026, domaine déjà authentifié) : mettre `SENDGRID_API_KEY` (permission « Mail Send ») et `COURRIEL_EXPEDITEUR` dans Vercel.
 3. **Variables** : `SESSION_SECRET` (32 caractères ou plus), `ADMIN_COURRIELS`, `APP_URL`, `SITE_URL`.
 4. **Les adresses** : `compte.agencejutras.com` pour l'application ; une redirection `agencejutras.com/r/*` vers l'application.
 5. **La Loi 25** : la politique de confidentialité du site doit parler du programme (noms, cellulaires, courriels Interac, témoin `aj_ref` de 90 jours).
