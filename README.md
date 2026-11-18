@@ -32,6 +32,19 @@ mot de passe `demonstration`. Les courriels (confirmation, mot de passe oublié)
 3. `npm run supabase` : l'application tourne sur `http://localhost:3100` avec la vraie base ; les courriels restent dans la boîte locale tant que `SENDGRID_API_KEY` est vide.
 4. `npm run test:isolation -- --supabase` : le même test, sur la vraie base. Il crée des membres « …@test.local ».
 
+## Les rendez-vous (agenda Google d'Alexis)
+
+Sur la page d'un lien, l'entrepreneur remplit **un seul formulaire** : ses coordonnées et une plage de 15 minutes
+(décision d'Alexis du 18 nov. 2026). `lib/agenda.ts` calcule les plages à partir de ses disponibilités (heure de
+Québec, préavis de 12 h, 14 jours), retire ce qui est occupé dans son agenda Google et ce que la plateforme a déjà
+réservé, puis crée l'événement dans l'agenda (Google envoie l'invitation). La référence garde `rendez_vous` et
+`evenement_id` ; le membre voit « Rencontre le … », la console aussi.
+
+- **Changer les disponibilités** : `DISPONIBILITES` dans `lib/agenda.ts`.
+- **Brancher l'agenda** : `GOOGLE_CLIENT_ID` et `GOOGLE_CLIENT_SECRET` dans `.env.local`, puis `npm run google`
+  (une fois) ; copier les trois `GOOGLE_*` dans Vercel. Sans eux, l'agenda est simulé : rien n'est bloqué ni créé.
+- **Base existante** : exécuter `supabase/migration-2026-11-18-rendez-vous.sql` une fois.
+
 ## Le compte admin
 
 Deux façons, au choix :

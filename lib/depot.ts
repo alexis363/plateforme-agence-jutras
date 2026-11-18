@@ -91,7 +91,8 @@ const membreDe = (r: Ligne): Membre => ({
 const refDe = (r: Ligne): Reference => ({
   id: r.id as string, membreId: r.membre_id as string, entreprise: r.entreprise as string, contact: r.contact as string,
   metier: r.metier as string, cellulaire: r.cellulaire as string, courriel: r.courriel as string,
-  casseTete: r.casse_tete as string, moment: r.moment as string, creeLe: r.cree_le as string, etape: r.etape as number,
+  casseTete: r.casse_tete as string, moment: r.moment as string, rendezVous: (r.rendez_vous as string) ?? null,
+  evenementId: (r.evenement_id as string) ?? null, creeLe: r.cree_le as string, etape: r.etape as number,
   fermee: (r.fermee as string) ?? null, notes: r.notes as string, historique: (r.historique as Evenement[]) ?? [],
 });
 
@@ -348,7 +349,7 @@ export async function ajouterVisite(membreId: string): Promise<void> {
   await ecrire((b) => { b.visites.push({ membreId, le: maintenant() }); });
 }
 
-export type NouvelleDemande = Pick<Reference, "entreprise" | "contact" | "metier" | "cellulaire" | "courriel" | "casseTete" | "moment">;
+export type NouvelleDemande = Pick<Reference, "entreprise" | "contact" | "metier" | "cellulaire" | "courriel" | "casseTete" | "moment" | "rendezVous" | "evenementId">;
 
 // Le premier qui réfère gagne : une entreprise déjà référée (même cellulaire) dans les 6 derniers mois reste au premier.
 // Se référer soi-même ne compte pas. Dans les deux cas, la demande est gardée, mais fermée avec sa raison.
@@ -364,8 +365,10 @@ export async function creerReference(membreId: string, d: NouvelleDemande): Prom
   const cell = normaliserCellulaire(d.cellulaire);
   const limite = new Date();
   limite.setMonth(limite.getMonth() - VALIDITE_MOIS);
-  const historique = (fermee: string | null): Evenement[] =>
-    [{ le: maintenant(), quoi: fermee ? `Demande reçue, fermée : ${fermee}` : "Demande reçue par le lien" }];
+  const historique = (fermee: string | null): Evenement[] => [
+    { le: maintenant(), quoi: fermee ? `Demande reçue, fermée : ${fermee}` : "Demande reçue par le lien" },
+    ...(d.rendezVous && !fermee ? [{ le: maintenant(), quoi: `Rencontre prévue le ${d.moment}` }] : []),
+  ];
 
   if (moteur() === "supabase") {
     const membre = await membreParId(membreId);
@@ -375,7 +378,8 @@ export async function creerReference(membreId: string, d: NouvelleDemande): Prom
     const fermee = raisonFermeture(membre, d, deja ? { membreId: deja.membre_id as string } : undefined);
     const r = ok(await sb()!.from("refs").insert({
       membre_id: membreId, entreprise: d.entreprise, contact: d.contact, metier: d.metier, cellulaire: d.cellulaire,
-      cellulaire_norm: cell, courriel: d.courriel, casse_tete: d.casseTete, moment: d.moment, fermee, historique: historique(fermee),
+      cellulaire_norm: cell, courriel: d.courriel, casse_tete: d.casseTete, moment: d.moment, rendez_vous: d.rendezVous,
+      evenement_id: d.evenementId, fermee, historique: historique(fermee),
     }).select("*").single());
     return refDe(r);
   }
@@ -389,6 +393,15 @@ export async function creerReference(membreId: string, d: NouvelleDemande): Prom
     b.references.push(r);
     return r;
   });
+}
+
+// Les rendez-vous déjà pris par la plateforme (à partir d'une date) : ils bloquent leur plage même si
+// Google Agenda ne les montre pas encore. Seulement des heures : rien sur qui les a pris.
+export async function rendezVousPris(apres: string): Promise<string[]> {
+  if (moteur() === "supabase") {
+    return liste(await sb()!.from("refs").select("rendez_vous").gte("rendez_vous", apres)).map((r) => r.rendez_vous as string);
+  }
+  return (await lire()).references.filter((r) => r.rendezVous && r.rendezVous >= apres).map((r) => r.rendezVous!);
 }
 
 // ---------- Console d'admin (après exigerAdmin() seulement) ----------

@@ -9,6 +9,7 @@
     "local": "node scripts/local.mjs",
     "supabase": "node scripts/supabase.mjs",
     "creer-admin": "node scripts/creer-admin.mjs",
+    "google": "node scripts/google-autoriser.mjs",
     "demo": "node scripts/demo-local.mjs",
     "test:isolation": "node scripts/test-isolation.mjs"
   },

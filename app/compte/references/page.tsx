@@ -3,11 +3,13 @@ import { referencesDuMembre, visitesDuMembre } from "@/lib/depot.ts";
 import { chiffresMembre, visitesParSemaine } from "@/lib/stats.ts";
 import { ETAPES, RECOMPENSE, dateCourte } from "@/lib/regles.ts";
 import type { Reference } from "@/lib/types.ts";
+import { momentCourt } from "@/lib/agenda.ts";
 
 function statut(r: Reference): [string, string] {
   if (r.fermee) return ["Fermée", "p-neutre"];
   if (r.etape === 6) return [`${RECOMPENSE} $ versés`, "p-ok"];
   if (r.etape === 5) return [`Vos ${RECOMPENSE} $ partent dans les 24 h`, "p-cours"];
+  if (r.etape <= 2 && r.rendezVous) return [`Rencontre le ${momentCourt(r.rendezVous)}`, "p-cours"];
   return [ETAPES[r.etape - 1], r.etape === 1 ? "p-neutre" : "p-cours"];
 }
 

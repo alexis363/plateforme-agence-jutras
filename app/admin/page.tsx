@@ -2,13 +2,14 @@ import Link from "next/link";
 import { exigerAdmin } from "@/lib/session.ts";
 import { adminTout } from "@/lib/depot.ts";
 import { RECOMPENSE, dateCourte, dateLongue } from "@/lib/regles.ts";
+import { momentCourt } from "@/lib/agenda.ts";
 
 export default async function Aujourdhui() {
   const admin = await exigerAdmin();
   const { membres, references } = await adminTout();
   const nom = (id: string) => membres.find((m) => m.id === id);
   const actives = references.filter((r) => !r.fermee);
-  const aAppeler = actives.filter((r) => r.etape === 1).sort((a, b) => a.creeLe.localeCompare(b.creeLe));
+  const aAppeler = actives.filter((r) => r.etape === 1).sort((a, b) => (a.rendezVous ?? a.creeLe).localeCompare(b.rendezVous ?? b.creeLe));
   const aVerser = actives.filter((r) => r.etape === 5);
   const semaine = Date.now() - 7 * 86400e3;
   const nouveauxMembres = membres.filter((m) => m.confirme && m.role === "membre" && new Date(m.creeLe).getTime() > semaine);
@@ -29,7 +30,7 @@ export default async function Aujourdhui() {
           {aAppeler.length + aVerser.length === 0 && <p className="vide">Rien à faire pour le programme de référence. Les nouvelles demandes apparaîtront ici.</p>}
           {aAppeler.map((r) => (
             <div className="tache" key={r.id}>
-              <div className="t-txt"><b>Appeler {r.contact}, {r.entreprise}</b><small>{r.metier} · {r.cellulaire} · préfère {r.moment} · référé par {nom(r.membreId)?.prenom ?? "?"}</small></div>
+              <div className="t-txt"><b>Appeler {r.contact}, {r.entreprise}</b><small>{r.metier} · {r.cellulaire} · {r.rendezVous ? `rendez-vous le ${momentCourt(r.rendezVous)}` : r.moment} · référé par {nom(r.membreId)?.prenom ?? "?"}</small></div>
               <Link className="lien" href={`/admin/references/${r.id}`}>Ouvrir</Link>
             </div>
           ))}

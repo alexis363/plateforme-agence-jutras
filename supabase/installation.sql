@@ -32,6 +32,8 @@ create table if not exists refs (
   courriel text not null default '',
   casse_tete text not null default '',
   moment text not null,
+  rendez_vous timestamptz, -- rendez-vous de 15 min pris dans l'agenda Google d'Alexis
+  evenement_id text, -- l'événement Google Agenda correspondant
   cree_le timestamptz not null default now(),
   etape smallint not null default 1 check (etape between 1 and 6),
   fermee text,

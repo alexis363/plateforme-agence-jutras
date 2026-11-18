@@ -4,6 +4,7 @@ import { exigerAdmin } from "@/lib/session.ts";
 import { adminTout } from "@/lib/depot.ts";
 import { RECOMPENSE, VALIDITE_MOIS, dateCourte, dateLongue } from "@/lib/regles.ts";
 import Actions from "./Actions.tsx";
+import { momentTexte } from "@/lib/agenda.ts";
 
 export default async function FicheReference({ params }: { params: Promise<{ id: string }> }) {
   await exigerAdmin();
@@ -39,7 +40,7 @@ export default async function FicheReference({ params }: { params: Promise<{ id:
               <div><span>Contact</span><b>{r.contact}</b></div>
               <div><span>Cellulaire</span><b><a href={`tel:${r.cellulaire}`}>{r.cellulaire}</a></b></div>
               <div><span>Courriel</span><b>{r.courriel || "—"}</b></div>
-              <div><span>Moment préféré</span><b>{r.moment}</b></div>
+              <div><span>Rendez-vous</span><b>{r.rendezVous ? momentTexte(r.rendezVous) : r.moment}</b></div>
               <div><span>Référence valide jusqu'au</span><b>{dateLongue(expire.toISOString())}</b></div>
             </div>
             {r.casseTete && <><div className="etiq" style={{ marginTop: 14 }}>Son plus gros casse-tête</div><p style={{ margin: 0, fontSize: 14 }}>{r.casseTete}</p></>}

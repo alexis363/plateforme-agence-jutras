@@ -26,7 +26,9 @@ export type Reference = {
   cellulaire: string;
   courriel: string;
   casseTete: string;
-  moment: string; // le moment préféré pour l'appel, choisi sur la page du lien
+  moment: string; // le rendez-vous en texte (« lundi 23 novembre à 19 h »), ou ce qui en tient lieu
+  rendezVous: string | null; // début du rendez-vous de 15 min pris dans l'agenda Google d'Alexis
+  evenementId: string | null; // l'événement correspondant dans Google Agenda
   creeLe: string;
   etape: number; // 1 à 6, voir ETAPES
   fermee: string | null; // raison, si la référence ne mène nulle part
