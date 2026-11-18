@@ -1,6 +1,7 @@
 import { exigerAdmin } from "@/lib/session.ts";
 import { adminTout } from "@/lib/depot.ts";
 import { dateCourte } from "@/lib/regles.ts";
+import SupprimerMembre from "./SupprimerMembre.tsx";
 
 export default async function Membres() {
   await exigerAdmin();
@@ -13,7 +14,7 @@ export default async function Membres() {
       <p className="sous">Les personnes inscrites au programme de référence. Un lien ne s'active qu'une fois le courriel confirmé.</p>
       {liste.length === 0 ? <p className="vide">Aucun membre pour l'instant.</p> : (
         <div className="table-defile"><table>
-          <thead><tr><th>Membre</th><th>Lien</th><th>Inscrit le</th><th>Visites</th><th>Demandes</th><th>Clients</th></tr></thead>
+          <thead><tr><th>Membre</th><th>Lien</th><th>Inscrit le</th><th>Visites</th><th>Demandes</th><th>Clients</th><th></th></tr></thead>
           <tbody>
             {liste.map((m) => {
               const refs = references.filter((r) => r.membreId === m.id);
@@ -25,6 +26,7 @@ export default async function Membres() {
                   <td>{visites.filter((v) => v.membreId === m.id).length}</td>
                   <td>{refs.length}</td>
                   <td>{refs.filter((r) => !r.fermee && r.etape >= 4).length}</td>
+                  <td><SupprimerMembre id={m.id} nom={`${m.prenom} ${m.nom}`} courriel={m.courriel} nbReferences={refs.length} /></td>
                 </tr>
               );
             })}

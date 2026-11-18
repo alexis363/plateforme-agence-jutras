@@ -64,6 +64,15 @@ Deux façons, au choix :
 - **Par un script** : `npm run creer-admin` crée ou remet à neuf le compte dans la vraie base ; le mot de passe se tape
   dans le terminal.
 
+## Supprimer un compte
+
+Demande d'Alexis du 18 nov. 2026 : le membre (Profil → Supprimer mon compte) et la console (Membres → Supprimer) peuvent
+supprimer un compte, toujours en **trois confirmations** (`app/ConfirmerSuppression.tsx`) : cocher « Je comprends », écrire
+un mot à la main (SUPPRIMER pour le membre, son courriel au complet pour la console), puis le dernier bouton (avec le mot
+de passe pour le membre). Les routes revérifient le mot et le mot de passe. Un compte admin ne se supprime jamais. Le
+membre part avec ses références, ses visites et ses liens (`supprimerMembre` dans `lib/depot.ts`) ; les rendez-vous déjà
+créés restent dans l'agenda Google.
+
 ## Prouver l'isolation
 
 Avec l'application en marche :

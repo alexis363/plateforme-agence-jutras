@@ -2,6 +2,7 @@ import { exigerMembre } from "@/lib/session.ts";
 import { dateLongue } from "@/lib/regles.ts";
 import FormulaireProfil from "./FormulaireProfil.tsx";
 import ChangerMotDePasse from "./ChangerMotDePasse.tsx";
+import SupprimerMonCompte from "./SupprimerMonCompte.tsx";
 
 export default async function Profil() {
   const m = await exigerMembre();
@@ -19,6 +20,13 @@ export default async function Profil() {
         <h2>Mot de passe</h2>
         <ChangerMotDePasse />
       </div>
+      {m.role !== "admin" && (
+        <div className="bloc zone-danger" style={{ maxWidth: 720, marginTop: 20 }}>
+          <h2>Supprimer mon compte</h2>
+          <p className="note" style={{ marginTop: -4, marginBottom: 14 }}>Votre lien, vos références et votre profil sont effacés pour de bon. Il faut confirmer trois fois.</p>
+          <SupprimerMonCompte slug={m.slug} />
+        </div>
+      )}
     </>
   );
 }

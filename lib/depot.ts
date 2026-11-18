@@ -328,6 +328,31 @@ export async function effacerEchecs(courriel: string): Promise<void> {
   essais.delete(courriel);
 }
 
+// ---------- Suppression d'un compte ----------
+
+// Supprime le membre et tout ce qui lui appartient : ses références, ses visites, ses liens par courriel et ses
+// essais de connexion. Appelée seulement par /api/compte (le membre de la session, mot de passe vérifié) ou par
+// /api/admin/membres/[id] (après le contrôle admin). Les rendez-vous déjà créés restent dans l'agenda Google.
+export async function supprimerMembre(membreId: string): Promise<boolean> {
+  if (moteur() === "supabase") {
+    const m = await membreParId(membreId);
+    if (!m) return false;
+    ok(await sb()!.from("membres").delete().eq("id", membreId)); // refs, visites et jetons partent avec (on delete cascade)
+    ok(await sb()!.from("tentatives").delete().eq("courriel", m.courriel));
+    return true;
+  }
+  const m = (await lire()).membres.find((x) => x.id === membreId);
+  if (!m) return false;
+  essais.delete(m.courriel);
+  return ecrire((b) => {
+    b.membres = b.membres.filter((x) => x.id !== membreId);
+    b.references = b.references.filter((r) => r.membreId !== membreId);
+    b.visites = b.visites.filter((v) => v.membreId !== membreId);
+    b.jetons = b.jetons.filter((j) => j.membreId !== membreId);
+    return true;
+  });
+}
+
 // ---------- Références : côté membre (toujours le membre de la session) ----------
 
 export async function referencesDuMembre(membreId: string): Promise<Reference[]> {

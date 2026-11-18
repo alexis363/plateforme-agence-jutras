@@ -143,6 +143,24 @@ await fetch(`${APP}/api/r/${A.slug}/demande`, json({ contact: "Dany Client", ent
 await relire();
 verifier(base().references.find((r) => r.entreprise === `Doublon ${id}`)?.fermee === "Déjà référée par un autre membre", "le premier qui réfère gagne");
 
+// 8. Supprimer un compte : jamais le compte d'un autre, toujours avec le mot écrit et le mot de passe.
+const supp = (temoin, corps, url = "/api/compte") => fetch(`${APP}${url}`, { method: "DELETE", headers: { "Content-Type": "application/json", ...(temoin ? { Cookie: temoin } : {}) }, body: JSON.stringify(corps) });
+verifier((await supp(null, { confirmation: "SUPPRIMER", motDePasse: MDP })).status === 401, "sans session, aucun compte ne se supprime");
+verifier((await supp(sa.temoin, { confirmation: "oui", motDePasse: MDP })).status === 400, "sans le mot SUPPRIMER, le compte reste");
+verifier((await supp(sa.temoin, { confirmation: "SUPPRIMER", motDePasse: "pas le bon" })).status === 400, "avec un mauvais mot de passe, le compte reste");
+await relire();
+const idA = base().membres.find((m) => m.courriel === A.courriel).id;
+const idB = base().membres.find((m) => m.courriel === B.courriel).id;
+verifier((await supp(sb.temoin, { confirmation: A.courriel }, `/api/admin/membres/${idA}`)).status === 403, "un membre ne peut pas supprimer le compte d'un autre");
+await relire();
+verifier(!!base().membres.find((m) => m.id === idA), "le compte d'Annie est toujours là");
+verifier((await supp(sb.temoin, { confirmation: "SUPPRIMER", motDePasse: NOUVEAU })).ok, "Bruno supprime son propre compte");
+await relire();
+verifier(!base().membres.find((m) => m.id === idB) && !base().references.some((r) => r.membreId === idB), "le compte de Bruno et ses références sont effacés");
+verifier(!!base().membres.find((m) => m.id === idA), "le compte d'Annie n'a pas bougé");
+verifier(((await page("/compte", sb.temoin)).headers.get("location") ?? "").includes("/connexion"), "l'ancienne session de Bruno ne sert plus");
+verifier((await page(`/r/${B.slug}`)).status === 404, "le lien de Bruno n'existe plus");
+
 // Sur la vraie base : retirer les membres de test (leurs références, visites et liens partent avec eux).
 if (SUPABASE) {
   const entetes = { apikey: process.env.SUPABASE_SECRET_KEY, Authorization: `Bearer ${process.env.SUPABASE_SECRET_KEY}` };
