@@ -1,0 +1,25 @@
+{
+  "name": "espace-compte-agence-jutras",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "local": "node scripts/local.mjs",
+    "demo": "node scripts/demo-local.mjs",
+    "test:isolation": "node scripts/test-isolation.mjs"
+  },
+  "dependencies": {
+    "next": "^16.4.2",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "^7.0.2"
+  }
+}
