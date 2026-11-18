@@ -17,6 +17,7 @@ const ICONES: Record<string, string> = {
   etoile: "m12 3 2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7Z",
   facture: "M6 3h12v18l-3-2-3 2-3-2-3 2ZM9 8h6M9 12h6",
   bulle: "M4 5h16v11H9l-5 4Z",
+  reglages: "M4 7h10M18 7h2M4 17h4M12 17h8M14 5v4M8 15v4",
 };
 
 export function Icone({ nom }: { nom: string }) {

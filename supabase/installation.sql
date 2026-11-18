@@ -82,12 +82,20 @@ create table if not exists rdv_site (
 );
 create index if not exists rdv_site_rendez_vous on rdv_site (rendez_vous);
 
+-- Réglages modifiables dans la console (page Réglages) : une ligne par sujet, ex. « agenda ».
+create table if not exists reglages (
+  cle text primary key,
+  valeur jsonb not null,
+  maj_le timestamptz not null default now()
+);
+
 alter table membres enable row level security;
 alter table refs enable row level security;
 alter table visites enable row level security;
 alter table jetons enable row level security;
 alter table tentatives enable row level security;
 alter table rdv_site enable row level security;
+alter table reglages enable row level security;
 
-revoke all on membres, refs, visites, jetons, tentatives, rdv_site from anon, authenticated;
-grant all on membres, refs, visites, jetons, tentatives, rdv_site to service_role;
+revoke all on membres, refs, visites, jetons, tentatives, rdv_site, reglages from anon, authenticated;
+grant all on membres, refs, visites, jetons, tentatives, rdv_site, reglages to service_role;

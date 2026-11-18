@@ -1,25 +1,31 @@
 // Les rendez-vous de 15 minutes, pris directement dans l'agenda Google d'Alexis (option A, choisie le 18 nov. 2026).
 //
-// 1. Les plages viennent des disponibilités ci-dessous (heure de Québec), moins le préavis de 12 h.
+// 1. Les plages viennent des réglages de la console (durée, pause, disponibilités, en heure de Québec),
+//    moins le préavis de 12 h. Sans réglages enregistrés, les valeurs par défaut ci-dessous s'appliquent.
 // 2. Ce qui est déjà inscrit dans l'agenda Google les bloque (requête « freeBusy »).
 // 3. La réservation crée l'événement dans l'agenda, et Google envoie l'invitation à l'entrepreneur.
 //
 // Sans les clés Google (sur l'ordinateur), l'agenda est simulé : les plages s'affichent, rien n'est bloqué ni créé.
 
 export const FUSEAU = "America/Toronto"; // l'heure de Québec
-export const DUREE_MIN = 15;
 export const PREAVIS_H = 12;
 
-// Les disponibilités d'Alexis au 18 nov. 2026 (0 = dimanche … 6 = samedi), en heures de Québec.
-// Vendredi, samedi et dimanche : aucune plage.
-export const DISPONIBILITES: Record<number, [string, string][]> = {
-  1: [["19:00", "21:00"]],
-  2: [["19:30", "21:00"]],
-  3: [["19:00", "22:00"]],
-  4: [["08:00", "10:00"], ["19:30", "21:00"]],
+import { rendezVousPris, lireReglagesAgenda } from "./depot.ts";
+import type { ReglagesAgenda } from "./types.ts";
+
+// Les valeurs par défaut : les disponibilités d'Alexis au 18 nov. 2026 (0 = dimanche … 6 = samedi), 15 minutes, sans pause.
+export const REGLAGES_DEFAUT: ReglagesAgenda = {
+  duree: 15,
+  pause: 0,
+  disponibilites: {
+    "0": [], "1": [["19:00", "21:00"]], "2": [["19:30", "21:00"]], "3": [["19:00", "22:00"]],
+    "4": [["08:00", "10:00"], ["19:30", "21:00"]], "5": [], "6": [],
+  },
 };
 
-import { rendezVousPris } from "./depot.ts";
+export async function reglagesAgenda(): Promise<ReglagesAgenda> {
+  return (await lireReglagesAgenda()) ?? REGLAGES_DEFAUT;
+}
 
 // ---------- Heure de Québec ↔ instant universel, sans bibliothèque ----------
 
@@ -70,7 +76,9 @@ export function momentCourt(iso: string): string {
 export type Plage = { debut: string; heure: string };
 export type JourDePlages = { date: string; libelle: string; plages: Plage[] };
 
-function plagesTheoriques(maintenant = Date.now()): { debut: number; jourCle: string; libelle: string; heure: string }[] {
+// Les plages possibles selon les réglages : une toutes les (durée + pause) minutes, et le rendez-vous finit
+// avant la fin de la disponibilité.
+function plagesTheoriques(r: ReglagesAgenda, maintenant = Date.now()): { debut: number; jourCle: string; libelle: string; heure: string }[] {
   const auj = enQuebec(maintenant);
   const premier = maintenant + PREAVIS_H * 3600e3;
   const sortie = [];
@@ -81,9 +89,9 @@ function plagesTheoriques(maintenant = Date.now()): { debut: number; jourCle: st
   for (let i = 0; i <= horizon; i++) {
     const d = new Date(Date.UTC(auj.a, auj.m - 1, auj.j + i));
     const [a, m, j] = [d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate()];
-    for (const [de, a2] of DISPONIBILITES[d.getUTCDay()] ?? []) {
+    for (const [de, a2] of r.disponibilites[String(d.getUTCDay())] ?? []) {
       const [h1, m1] = de.split(":").map(Number), [h2, m2] = a2.split(":").map(Number);
-      for (let t = h1 * 60 + m1; t + DUREE_MIN <= h2 * 60 + m2; t += DUREE_MIN) {
+      for (let t = h1 * 60 + m1; t + r.duree <= h2 * 60 + m2; t += r.duree + r.pause) {
         const debut = depuisQuebec(a, m, j, Math.floor(t / 60), t % 60).getTime();
         if (debut < premier) continue;
         sortie.push({
@@ -127,9 +135,10 @@ async function jetonGoogle(): Promise<string> {
   return jeton.valeur;
 }
 
-async function occupe(de: number, a: number): Promise<{ debut: number; fin: number }[]> {
-  const deja = (await rendezVousPris(new Date(de - DUREE_MIN * 60e3).toISOString()))
-    .map((iso) => ({ debut: Date.parse(iso), fin: Date.parse(iso) + DUREE_MIN * 60e3 }));
+// Ce qui est déjà pris entre deux instants. Les rendez-vous de la plateforme comptent pour la durée réglée.
+async function occupe(de: number, a: number, duree: number): Promise<{ debut: number; fin: number }[]> {
+  const deja = (await rendezVousPris(new Date(de - 120 * 60e3).toISOString()))
+    .map((iso) => ({ debut: Date.parse(iso), fin: Date.parse(iso) + duree * 60e3 }));
   if (!googleConfigure()) return deja;
   const rep = await fetch("https://www.googleapis.com/calendar/v3/freeBusy", {
     method: "POST",
@@ -143,17 +152,20 @@ async function occupe(de: number, a: number): Promise<{ debut: number; fin: numb
   return [...deja, ...(cal.busy ?? []).map((b) => ({ debut: Date.parse(b.start), fin: Date.parse(b.end) }))];
 }
 
-const chevauche = (debut: number, pris: { debut: number; fin: number }[]) =>
-  pris.some((p) => debut < p.fin && debut + DUREE_MIN * 60e3 > p.debut);
+// Une plage est prise si elle touche un moment occupé, en gardant la pause avant et après.
+const chevauche = (debut: number, pris: { debut: number; fin: number }[], r: ReglagesAgenda) =>
+  pris.some((p) => debut - r.pause * 60e3 < p.fin && debut + (r.duree + r.pause) * 60e3 > p.debut);
 
 // Les plages libres de cette semaine et de la suivante, regroupées par jour.
 export async function plagesLibres(): Promise<JourDePlages[]> {
-  const toutes = plagesTheoriques();
+  const r = await reglagesAgenda();
+  const toutes = plagesTheoriques(r);
   if (!toutes.length) return [];
-  const pris = await occupe(toutes[0].debut, toutes[toutes.length - 1].debut + DUREE_MIN * 60e3);
+  const marge = (r.duree + r.pause) * 60e3;
+  const pris = await occupe(toutes[0].debut - r.pause * 60e3, toutes[toutes.length - 1].debut + marge, r.duree);
   const jours = new Map<string, JourDePlages>();
   for (const p of toutes) {
-    if (chevauche(p.debut, pris)) continue;
+    if (chevauche(p.debut, pris, r)) continue;
     const jour = jours.get(p.jourCle) ?? { date: p.jourCle, libelle: p.libelle, plages: [] };
     jour.plages.push({ debut: new Date(p.debut).toISOString(), heure: p.heure });
     jours.set(p.jourCle, jour);
@@ -163,9 +175,10 @@ export async function plagesLibres(): Promise<JourDePlages[]> {
 
 // Vérifie, au moment de réserver, que la plage existe encore et qu'elle est toujours libre.
 export async function plageEncoreLibre(debutIso: string): Promise<boolean> {
+  const r = await reglagesAgenda();
   const debut = Date.parse(debutIso);
-  if (!plagesTheoriques().some((p) => p.debut === debut)) return false;
-  return !chevauche(debut, await occupe(debut, debut + DUREE_MIN * 60e3));
+  if (!plagesTheoriques(r).some((p) => p.debut === debut)) return false;
+  return !chevauche(debut, await occupe(debut - r.pause * 60e3, debut + (r.duree + r.pause) * 60e3, r.duree), r);
 }
 
 // ambassadeur : le membre qui a référé, ou null pour un rendez-vous pris sur le site web.
@@ -175,6 +188,7 @@ export type Rdv = { debut: string; entreprise: string; contact: string; metier: 
 // Retourne l'identifiant de l'événement (null en agenda simulé).
 export async function creerRendezVous(r: Rdv): Promise<string | null> {
   if (!googleConfigure()) return null;
+  const { duree } = await reglagesAgenda();
   const debut = Date.parse(r.debut);
   const description = [
     r.ambassadeur ? `Recommandé par : ${r.ambassadeur}` : "Pris sur le site agencejutras.com",
@@ -190,10 +204,10 @@ export async function creerRendezVous(r: Rdv): Promise<string | null> {
     method: "POST",
     headers: { Authorization: `Bearer ${await jetonGoogle()}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      summary: r.ambassadeur ? `Appel 15 min · Kairos · ${r.entreprise}` : `Appel 15 min · Agence Jutras · ${r.entreprise}`,
+      summary: r.ambassadeur ? `Appel ${duree} min · Kairos · ${r.entreprise}` : `Appel ${duree} min · Agence Jutras · ${r.entreprise}`,
       description,
       start: { dateTime: new Date(debut).toISOString(), timeZone: FUSEAU },
-      end: { dateTime: new Date(debut + DUREE_MIN * 60e3).toISOString(), timeZone: FUSEAU },
+      end: { dateTime: new Date(debut + duree * 60e3).toISOString(), timeZone: FUSEAU },
       attendees: r.courriel ? [{ email: r.courriel, displayName: r.contact }] : [],
       reminders: { useDefault: true },
     }),

@@ -10,7 +10,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { randomUUID, createHash, randomBytes } from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import type { Base, Membre, Reference, RdvSite, Jeton, CourrielLocal, Evenement } from "./types.ts";
+import type { Base, Membre, Reference, RdvSite, ReglagesAgenda, Jeton, CourrielLocal, Evenement } from "./types.ts";
 import { VALIDITE_MOIS } from "./regles.ts";
 
 const DOSSIER = path.join(process.cwd(), ".donnees");
@@ -417,6 +417,28 @@ export async function rendezVousPris(apres: string): Promise<string[]> {
   }
   const b = await lire();
   return [...b.references, ...b.rdvSite].filter((r) => r.rendezVous && r.rendezVous >= apres).map((r) => r.rendezVous!);
+}
+
+// ---------- Réglages de l'agenda (lus par tous, écrits seulement par la console) ----------
+
+// null tant qu'Alexis n'a rien enregistré : lib/agenda.ts prend alors ses valeurs par défaut.
+export async function lireReglagesAgenda(): Promise<ReglagesAgenda | null> {
+  if (moteur() === "supabase") {
+    const r = await sb()!.from("reglages").select("valeur").eq("cle", "agenda").maybeSingle();
+    // Table absente (migration pas encore exécutée) : les valeurs par défaut s'appliquent, rien ne casse.
+    if (r.error) { console.error(`reglages : ${r.error.message}`); return null; }
+    return (r.data?.valeur as ReglagesAgenda) ?? null;
+  }
+  return (await lire()).reglagesAgenda ?? null;
+}
+
+// Après exigerAdmin() seulement.
+export async function adminEcrireReglagesAgenda(r: ReglagesAgenda): Promise<void> {
+  if (moteur() === "supabase") {
+    ok(await sb()!.from("reglages").upsert({ cle: "agenda", valeur: r, maj_le: maintenant() }));
+    return;
+  }
+  await ecrire((b) => { b.reglagesAgenda = r; });
 }
 
 // ---------- Rendez-vous pris sur le site web (sans lien de référence) ----------

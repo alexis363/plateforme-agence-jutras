@@ -22,6 +22,7 @@ export default async function Console({ children }: { children: React.ReactNode 
         { href: "/admin/avis", texte: "Avis des clients", icone: "etoile", groupe: "Clients", bientot: true },
         { href: "/admin/factures", texte: "Factures", icone: "facture", groupe: "Argent et soutien", bientot: true },
         { href: "/admin/soutien", texte: "Soutien", icone: "bulle", groupe: "Argent et soutien", bientot: true },
+        { href: "/admin/reglages", texte: "Réglages", icone: "reglages", groupe: "Agence" },
       ]}
     >
       {children}

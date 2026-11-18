@@ -36,6 +36,14 @@ export type Reference = {
   historique: Evenement[];
 };
 
+// Les réglages de l'agenda, modifiables dans la console (page Réglages, demande d'Alexis du 18 nov. 2026).
+// disponibilites : 0 = dimanche … 6 = samedi, des plages « HH:MM » en heure de Québec.
+export type ReglagesAgenda = {
+  duree: number; // durée d'un rendez-vous, en minutes
+  pause: number; // temps libre gardé avant et après chaque rendez-vous, en minutes
+  disponibilites: Record<string, [string, string][]>;
+};
+
 export type Visite = { membreId: string; le: string };
 
 // Un rendez-vous de 15 minutes pris sur le site web (agencejutras.com), sans lien de référence.
@@ -67,6 +75,7 @@ export type Base = {
   membres: Membre[];
   references: Reference[];
   rdvSite: RdvSite[];
+  reglagesAgenda?: ReglagesAgenda | null;
   visites: Visite[];
   jetons: Jeton[];
   courriels: CourrielLocal[]; // boîte locale, sur l'ordinateur seulement

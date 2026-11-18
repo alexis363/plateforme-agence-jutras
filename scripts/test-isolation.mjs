@@ -110,7 +110,7 @@ verifier(!htmlA.includes(secret), "A ne voit PAS la référence de B");
 verifier(!(await (await page("/compte", sa.temoin)).text()).includes(secret), "l'accueil de A ne montre pas la référence de B");
 
 // 4. La console est fermée aux membres et aux visiteurs.
-for (const chemin of ["/admin", "/admin/references", "/admin/membres"]) {
+for (const chemin of ["/admin", "/admin/references", "/admin/membres", "/admin/reglages"]) {
   const r = await page(chemin, sa.temoin);
   verifier(r.status >= 300 && r.status < 400 && !(r.headers.get("location") ?? "").includes("/admin"), `un membre est renvoyé hors de ${chemin}`);
 }
@@ -120,6 +120,11 @@ const patch = await fetch(`${APP}/api/admin/references/${refB.id}`, { method: "P
 verifier(patch.status === 403, "un membre ne peut pas faire avancer une référence");
 await relire();
 verifier(base().references.find((r) => r.id === refB.id).etape === 1, "la référence n'a pas bougé");
+const corpsReg = JSON.stringify({ duree: 60, pause: 0, disponibilites: {} });
+const reg = await fetch(`${APP}/api/admin/reglages`, { method: "PUT", headers: { "Content-Type": "application/json", Cookie: sa.temoin }, body: corpsReg });
+verifier(reg.status === 403, "un membre ne peut pas changer les réglages de l'agenda");
+const regAnonyme = await fetch(`${APP}/api/admin/reglages`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: corpsReg });
+verifier(regAnonyme.status === 403, "sans session, les réglages ne changent pas");
 
 // 5. Sans session, ou avec un témoin falsifié : renvoyé à la connexion.
 verifier(((await page("/compte")).headers.get("location") ?? "").includes("/connexion"), "sans session, /compte renvoie à la connexion");

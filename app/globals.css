@@ -184,3 +184,15 @@ tr.cliquable:hover{background:#FAF6F1}
   .boite{padding:28px 20px 24px}
 }
 @media (prefers-reduced-motion:reduce){main{animation:none}}
+
+/* Console, page Réglages */
+.reg-ligne{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.reg-jour{display:grid;grid-template-columns:100px minmax(0,1fr);gap:12px;align-items:start;padding:12px 0;border-top:1px solid var(--bord)}
+.reg-jour>b{font-weight:500;padding-top:8px}
+.reg-plages{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.reg-plages>.note{padding-top:8px}
+.reg-plage{display:flex;align-items:center;gap:6px}
+.reg-plage input{width:112px;padding:8px 6px;border:1px solid var(--bord);background:var(--carte);font:inherit;color:var(--ink)}
+.reg-retirer{width:30px;height:30px;border:1px solid var(--bord);background:none;color:var(--sec);font-size:18px;line-height:1;cursor:pointer}
+.reg-retirer:hover{border-color:var(--terra-dk);color:var(--ink)}
+@media (max-width:600px){.reg-ligne{grid-template-columns:1fr}.reg-jour{grid-template-columns:1fr;gap:6px}}
