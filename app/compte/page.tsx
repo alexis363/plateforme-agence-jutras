@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Partage from "./Partage.tsx";
+import Escalier from "./Escalier.tsx";
 import { exigerMembre } from "@/lib/session.ts";
 import { referencesDuMembre, visitesDuMembre } from "@/lib/depot.ts";
 import { lienReference } from "@/lib/courriel.ts";
@@ -33,12 +34,12 @@ export default async function AccueilMembre() {
         <Partage url={lien.url} affiche={lien.affiche} slug={m.slug} />
       </div>
 
-      <div className="chiffres">
-        <div className="chiffre"><b>{c.visites}</b><span>visites de votre lien</span></div>
-        <div className="chiffre"><b>{c.demandes}</b><span>rendez-vous réservé{c.demandes > 1 ? "s" : ""}</span></div>
-        <div className="chiffre"><b>{c.enEssai}</b><span>{c.enEssai > 1 ? "personnes" : "personne"} en essai gratuit</span></div>
-        <div className="chiffre"><b>{c.payants}</b><span>client{c.payants > 1 ? "s" : ""}</span></div>
-      </div>
+      <Escalier marches={[
+        { n: c.visites, texte: `visite${c.visites > 1 ? "s" : ""} de votre lien` },
+        { n: c.demandes, texte: `rendez-vous réservé${c.demandes > 1 ? "s" : ""}` },
+        { n: c.enEssai, texte: `essai${c.enEssai > 1 ? "s" : ""} gratuit${c.enEssai > 1 ? "s" : ""} commencé${c.enEssai > 1 ? "s" : ""}` },
+        { n: c.payants, texte: `client${c.payants > 1 ? "s" : ""}`, note: `${RECOMPENSE} $ chacun` },
+      ]} />
 
       <div className="deux">
         <div className="bloc">
