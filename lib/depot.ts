@@ -524,6 +524,24 @@ export async function adminMajReference(id: string, d: { etape?: number; fermee?
   });
 }
 
+// Supprime une référence, seulement si elle est déjà fermée (demande d'Alexis du 19 nov. 2026 : la console seulement).
+export async function adminSupprimerReference(id: string): Promise<"ok" | "introuvable" | "ouverte"> {
+  if (moteur() === "supabase") {
+    const r = ok(await sb()!.from("refs").select("fermee").eq("id", id).maybeSingle());
+    if (!r) return "introuvable";
+    if (!r.fermee) return "ouverte";
+    ok(await sb()!.from("refs").delete().eq("id", id).not("fermee", "is", null));
+    return "ok";
+  }
+  return ecrire((b) => {
+    const r = b.references.find((x) => x.id === id);
+    if (!r) return "introuvable";
+    if (!r.fermee) return "ouverte";
+    b.references = b.references.filter((x) => x.id !== id);
+    return "ok";
+  });
+}
+
 // ---------- Boîte locale des courriels (ordinateur, sans SendGrid) : toujours un fichier ----------
 
 const BOITE = path.join(DOSSIER, "courriels.json");

@@ -4,6 +4,7 @@ import { exigerAdmin } from "@/lib/session.ts";
 import { adminTout } from "@/lib/depot.ts";
 import { RECOMPENSE, VALIDITE_MOIS, dateCourte, dateLongue } from "@/lib/regles.ts";
 import Actions from "./Actions.tsx";
+import SupprimerReference from "./SupprimerReference.tsx";
 import { momentTexte } from "@/lib/agenda.ts";
 
 export default async function FicheReference({ params }: { params: Promise<{ id: string }> }) {
@@ -27,6 +28,12 @@ export default async function FicheReference({ params }: { params: Promise<{ id:
             <h2>Faire avancer</h2>
             <p className="note" style={{ marginTop: -6 }}>Le membre voit l'étape dans son compte. À l'étape 5, versez {RECOMPENSE} $ dans les 24 h, puis passez à 6.</p>
             <Actions id={r.id} etape={r.etape} fermee={r.fermee} notes={r.notes} />
+          </div>
+          <div className="bloc zone-danger">
+            <h2>Supprimer la référence</h2>
+            {r.fermee
+              ? <SupprimerReference id={r.id} entreprise={r.entreprise} membre={m ? `${m.prenom} ${m.nom}` : "l'ambassadeur"} />
+              : <p className="note" style={{ margin: 0 }}>Fermez d'abord la référence (plus haut, « Fermer la référence ») : le bouton pour la supprimer apparaîtra ici.</p>}
           </div>
           <div className="bloc">
             <h2>Historique</h2>

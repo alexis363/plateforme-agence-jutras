@@ -120,6 +120,12 @@ const patch = await fetch(`${APP}/api/admin/references/${refB.id}`, { method: "P
 verifier(patch.status === 403, "un membre ne peut pas faire avancer une référence");
 await relire();
 verifier(base().references.find((r) => r.id === refB.id).etape === 1, "la référence n'a pas bougé");
+const suppRef = await fetch(`${APP}/api/admin/references/${refB.id}`, { method: "DELETE", headers: { "Content-Type": "application/json", Cookie: sa.temoin }, body: JSON.stringify({ confirmation: "SUPPRIMER" }) });
+verifier(suppRef.status === 403, "un membre ne peut pas supprimer une référence");
+const suppRefB = await fetch(`${APP}/api/admin/references/${refB.id}`, { method: "DELETE", headers: { "Content-Type": "application/json", Cookie: sb.temoin }, body: JSON.stringify({ confirmation: "SUPPRIMER" }) });
+verifier(suppRefB.status === 403, "même l'ambassadeur ne peut pas supprimer sa propre référence");
+await relire();
+verifier(!!base().references.find((r) => r.id === refB.id), "la référence est toujours là");
 const corpsReg = JSON.stringify({ duree: 60, pause: 0, disponibilites: {} });
 const reg = await fetch(`${APP}/api/admin/reglages`, { method: "PUT", headers: { "Content-Type": "application/json", Cookie: sa.temoin }, body: corpsReg });
 verifier(reg.status === 403, "un membre ne peut pas changer les réglages de l'agenda");
