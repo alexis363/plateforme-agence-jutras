@@ -35,6 +35,8 @@ nav.cote a:hover{background:#E8DFD4}
 nav.cote a.actif{background:var(--carte);color:var(--deep);font-weight:500;box-shadow:inset 3px 0 0 var(--terra)}
 nav.cote a.bientot{color:var(--sec);pointer-events:none}
 nav.cote a.bientot small{margin-left:auto;font-size:10px;letter-spacing:.12em;text-transform:uppercase}
+.menu-bas-mobile{display:none;flex-direction:column;gap:3px;margin-top:10px;padding-top:10px;border-top:1px solid var(--bord)}
+.menu-bas-mobile button{width:100%;text-align:left;padding:11px 14px;font:inherit;font-size:14px;color:var(--sec);background:none;border:0;cursor:pointer}
 nav.cote .nb{margin-left:auto;font-size:11px;background:var(--terra);color:var(--deep);border-radius:10px;padding:1px 7px;font-weight:500}
 .statut-compte{margin-top:auto;padding:16px 14px;font-size:13px;color:var(--sec);border-top:1px solid var(--bord)}
 .statut-compte b{display:block;color:var(--ink);font-weight:500}
@@ -176,6 +178,7 @@ tr.cliquable:hover{background:#FAF6F1}
   .cadre{grid-template-columns:1fr}
   nav.cote{display:none;border-right:0;border-bottom:1px solid var(--bord)}
   nav.cote.ouvert{display:flex}
+  .menu-bas-mobile{display:flex}
   main{padding:24px 16px 70px}.titre{font-size:26px}
   .lien-carte{padding:22px 18px}.url{flex-direction:column}.url .btn{width:100%}
   .entonnoir div{grid-template-columns:110px minmax(0,1fr) 30px}
