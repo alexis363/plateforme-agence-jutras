@@ -26,7 +26,7 @@ export default function Actions({ id, etape, fermee, notes }: { id: string; etap
         <div className="boutons-etapes">
           {ETAPES.map((e, i) => (
             <button key={e} className={`btn-2${i + 1 === etape ? " actif" : ""}`} disabled={occupe || i + 1 === etape}
-              onClick={() => maj({ etape: i + 1 }, i + 1 === 6 ? "Confirmez que la récompense a été versée par Interac." : undefined)}>
+              onClick={() => maj({ etape: i + 1 }, i + 1 === 6 ? "Confirmez que la récompense de 100 $ a été versée par Interac." : undefined)}>
               {i + 1}. {e}
             </button>
           ))}
@@ -34,13 +34,13 @@ export default function Actions({ id, etape, fermee, notes }: { id: string; etap
       )}
       <div style={{ marginTop: 14 }}>
         {fermee
-          ? <button className="lien" disabled={occupe} onClick={() => maj({ fermee: null })}>Rouvrir la référence</button>
+          ? <button className="lien" disabled={occupe} onClick={() => maj({ fermee: null })}>Rouvrir le prospect</button>
           : <button className="lien" disabled={occupe} onClick={() => {
-              const raison = window.prompt("Pourquoi fermer cette référence? (ex. : pas intéressé)");
+              const raison = window.prompt("Pourquoi fermer ce prospect? (ex. : pas intéressé)");
               if (raison) maj({ fermee: raison });
-            }}>Fermer la référence</button>}
+            }}>Fermer le prospect</button>}
       </div>
-      <label className="champ" style={{ marginTop: 18 }}><span>Notes privées (jamais montrées au membre)</span>
+      <label className="champ" style={{ marginTop: 18 }}><span>Notes privées (jamais montrées à l'ambassadeur)</span>
         <textarea value={texte} onChange={(e) => setTexte(e.target.value)} maxLength={2000} />
       </label>
       <button className="btn" disabled={occupe || texte === notes} onClick={() => maj({ notes: texte })}>Enregistrer les notes</button>

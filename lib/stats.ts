@@ -27,6 +27,7 @@ export function chiffresMembre(visites: string[], refs: Reference[]) {
     // Les étapes (lib/regles.ts, 19 nov. 2026) : 2 découverte, 3 installation, 4 essai gratuit, 5 client, 6 payé.
     // Compté comme un entonnoir : chaque nombre inclut ceux qui sont allés plus loin.
     rencontres: atteint(2),
+    installations: atteint(3),
     enEssai: atteint(4),
     payants: atteint(5),
     verses: atteint(6),

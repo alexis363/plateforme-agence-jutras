@@ -19,7 +19,8 @@ export type Evenement = { le: string; quoi: string };
 
 export type Reference = {
   id: string;
-  membreId: string;
+  membreId: string | null; // l'ambassadeur ; null pour un prospect venu par le site web
+  source: "lien" | "site"; // d'où vient le prospect (19 nov. 2026 : liens et site dans « Mes prospects »)
   entreprise: string;
   contact: string;
   metier: string;

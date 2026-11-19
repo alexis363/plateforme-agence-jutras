@@ -1,11 +1,11 @@
 import Link from "next/link";
 import Partage from "./Partage.tsx";
-import Escalier from "./Escalier.tsx";
+import Entonnoir from "./Entonnoir.tsx";
 import { exigerMembre } from "@/lib/session.ts";
 import { referencesDuMembre, visitesDuMembre } from "@/lib/depot.ts";
 import { lienReference } from "@/lib/courriel.ts";
 import { chiffresMembre } from "@/lib/stats.ts";
-import { RECOMPENSE, dateCourte } from "@/lib/regles.ts";
+import { ETAPES, RECOMPENSE, dateCourte } from "@/lib/regles.ts";
 
 export default async function AccueilMembre() {
   const m = await exigerMembre();
@@ -34,11 +34,14 @@ export default async function AccueilMembre() {
         <Partage url={lien.url} affiche={lien.affiche} slug={m.slug} />
       </div>
 
-      <Escalier marches={[
-        { n: c.visites, texte: `visite${c.visites > 1 ? "s" : ""} de votre lien` },
-        { n: c.demandes, texte: `rendez-vous réservé${c.demandes > 1 ? "s" : ""}` },
-        { n: c.enEssai, texte: `essai${c.enEssai > 1 ? "s" : ""} gratuit${c.enEssai > 1 ? "s" : ""} commencé${c.enEssai > 1 ? "s" : ""}` },
-        { n: c.payants, texte: `client${c.payants > 1 ? "s" : ""}`, note: `${RECOMPENSE} $ chacun` },
+      <Entonnoir bandes={[
+        { n: c.visites, texte: "Visites du lien" },
+        { n: c.demandes, texte: ETAPES[0] },
+        { n: c.rencontres, texte: ETAPES[1] },
+        { n: c.installations, texte: ETAPES[2] },
+        { n: c.enEssai, texte: ETAPES[3] },
+        { n: c.payants, texte: ETAPES[4], note: `${RECOMPENSE} $ chacun` },
+        { n: c.verses, texte: ETAPES[5] },
       ]} />
 
       <div className="deux">

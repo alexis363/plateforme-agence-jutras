@@ -14,8 +14,8 @@ export default async function Console({ children }: { children: React.ReactNode 
       etiquette="Console"
       entrees={[
         { href: "/admin", texte: "Aujourd'hui", icone: "soleil" },
-        { href: "/admin/references", texte: "Références", icone: "lien", groupe: "Programme de référence", nb: aTraiter },
-        { href: "/admin/membres", texte: "Membres", icone: "personne", groupe: "Programme de référence" },
+        { href: "/admin/references", texte: "Mes prospects", icone: "lien", groupe: "Programme de référence", nb: aTraiter },
+        { href: "/admin/membres", texte: "Ambassadeurs", icone: "personne", groupe: "Programme de référence" },
         // Les sections de la maquette qui viennent au bloc 2 (décembre 2026).
         { href: "/admin/clients", texte: "Mes clients", icone: "groupe", groupe: "Clients", bientot: true },
         { href: "/admin/suivis", texte: "Suivis", icone: "calendrier", groupe: "Clients", bientot: true },

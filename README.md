@@ -44,15 +44,17 @@ réservé, puis crée l'événement dans l'agenda (Google envoie l'invitation). 
   demande d'Alexis du 18 nov. 2026). Sans réglages enregistrés, `REGLAGES_DEFAUT` dans `lib/agenda.ts` s'applique.
 - **Brancher l'agenda** : `GOOGLE_CLIENT_ID` et `GOOGLE_CLIENT_SECRET` dans `.env.local`, puis `npm run google`
   (une fois) ; copier les trois `GOOGLE_*` dans Vercel. Sans eux, l'agenda est simulé : rien n'est bloqué ni créé.
-- **Base existante** : exécuter `supabase/migration-2026-11-18-rendez-vous.sql`, puis `supabase/migration-2026-11-18-rdv-site.sql` et `supabase/migration-2026-11-18-reglages.sql`, une fois chacun.
+- **Base existante** : exécuter `supabase/migration-2026-11-18-rendez-vous.sql`, `supabase/migration-2026-11-18-rdv-site.sql`,
+  `supabase/migration-2026-11-18-reglages.sql`, puis `supabase/migration-2026-11-19-prospects.sql`, une fois chacun.
 
 ### Le formulaire du site web
 
 La section contact de www.agencejutras.com a le même formulaire, sans ambassadeur (demande d'Alexis du 18 nov. 2026).
-Il appelle `GET /api/rdv/plages` et `POST /api/rdv` (table `rdv_site`) ; l'adresse de la plateforme est dans
+Il appelle `GET /api/rdv/plages` et `POST /api/rdv` ; depuis le 19 nov. 2026 la demande devient un **prospect** dans
+`refs` (sans ambassadeur, `source = 'site'`), suivi dans « Mes prospects » comme ceux des liens ; l'adresse de la plateforme est dans
 l'attribut `data-api` du bloc `#rdv` de `index.html`. Seuls `https://www.agencejutras.com` et `https://agencejutras.com`
 peuvent l'appeler (`lib/cors.ts`) ; `SITE_ORIGINES` en ajoute d'autres pour un essai. Un champ piège invisible arrête
-les robots simples. Les rendez-vous du site apparaissent dans la console, page Aujourd'hui.
+les robots simples.
 
 ## Le compte admin
 
@@ -100,7 +102,7 @@ Dans `lib/regles.ts` : 100 $, Kairos seulement, 6 mois, les 6 étapes, les place
 | `lib/courriel.ts` | Boîte locale sur l'ordinateur, SendGrid en ligne (sans suivi des clics) |
 | `app/compte/` | Espace du membre : lien, statistiques, références, règles, services, profil |
 | `app/r/[slug]/` | Page d'arrivée d'un lien, avec la demande de rendez-vous |
-| `app/admin/` | Console : Aujourd'hui, Références, Membres, Réglages (agenda). Clients, Suivis, Avis, Factures et Soutien viennent au bloc 2 |
+| `app/admin/` | Console : Aujourd'hui, Mes prospects (pipeline à fiches qu'on glisse), Ambassadeurs, Réglages (agenda). Clients, Suivis, Avis, Factures et Soutien viennent au bloc 2 |
 
 Connexion par **courriel et mot de passe**, pour les membres comme pour la console (décision d'Alexis du 17 nov. 2026).
 Mots de passe hachés avec scrypt (`lib/motdepasse.ts`), 10 caractères minimum, blocage de 15 min après 5 essais ratés

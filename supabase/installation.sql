@@ -23,7 +23,8 @@ create table if not exists membres (
 -- « refs » : le mot « references » est réservé en SQL.
 create table if not exists refs (
   id uuid primary key default gen_random_uuid(),
-  membre_id uuid not null references membres(id) on delete cascade,
+  membre_id uuid references membres(id) on delete cascade, -- null : prospect venu par le site web
+  source text not null default 'lien', -- « lien » (ambassadeur) ou « site » (19 nov. 2026)
   entreprise text not null,
   contact text not null,
   metier text not null,

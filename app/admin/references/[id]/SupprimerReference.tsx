@@ -2,16 +2,16 @@
 import { useRouter } from "next/navigation";
 import ConfirmerSuppression from "../../../ConfirmerSuppression.tsx";
 
-export default function SupprimerReference({ id, entreprise, membre }: { id: string; entreprise: string; membre: string }) {
+export default function SupprimerReference({ id, entreprise, membre }: { id: string; entreprise: string; membre: string | null }) {
   const router = useRouter();
   return (
     <ConfirmerSuppression
-      bouton="Supprimer la référence"
+      bouton="Supprimer le prospect"
       boutonClasse="lien-danger"
       titre={`Supprimer ${entreprise}`}
       pertes={[
         "La fiche de l'entrepreneur : coordonnées, casse-tête, notes privées et historique.",
-        `Elle disparaît aussi de l'espace de ${membre}.`,
+        membre ? `Il disparaît aussi de l'espace de ${membre}.` : "Il venait du site web : aucun ambassadeur n'est touché.",
         "Le rendez-vous, s'il y en a un, reste dans votre agenda Google.",
       ]}
       motAEcrire="SUPPRIMER"

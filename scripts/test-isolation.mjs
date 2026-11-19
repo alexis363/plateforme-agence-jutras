@@ -100,7 +100,7 @@ verifier((await fetch(`${APP}/api/mot-de-passe`, { method: "PUT", headers: { "Co
 
 // 3. Une référence pour B seulement.
 const secret = `Secret ${id}`;
-const rep = await fetch(`${APP}/api/r/${B.slug}/demande`, json({ contact: "Dany Client", entreprise: secret, metier: "Émondage", cellulaire: "418-555-2001", courriel: "", casseTete: "", moment: "lundi, midi" }));
+const rep = await fetch(`${APP}/api/r/${B.slug}/demande`, json({ contact: "Dany Client", entreprise: secret, metier: "Émondage", cellulaire: "418-555-2001", courriel: `prospect-${id}@test.local`, casseTete: "", moment: "lundi, midi" }));
 verifier(rep.ok, "une demande arrive par le lien de B");
 
 const htmlB = await (await page("/compte/references", sb.temoin)).text();
@@ -142,12 +142,12 @@ verifier((await fetch(`${APP}/api/profil`, { method: "PUT", headers: { "Content-
 verifier((await page(`/r/${C.slug}`)).status === 404, "le lien d'un membre non confirmé n'existe pas");
 
 // 7. Les règles : se référer soi-même, et le premier qui réfère gagne.
-await fetch(`${APP}/api/r/${B.slug}/demande`, json({ contact: "Bruno Test", entreprise: `Moi ${id}`, metier: "Ramonage", cellulaire: "418-555-1002", courriel: "", casseTete: "", moment: "lundi, midi" }));
+await fetch(`${APP}/api/r/${B.slug}/demande`, json({ contact: "Bruno Test", entreprise: `Moi ${id}`, metier: "Ramonage", cellulaire: "418-555-1002", courriel: `prospect-${id}@test.local`, casseTete: "", moment: "lundi, midi" }));
 await relire();
 verifier(!!base().references.find((r) => r.entreprise === `Moi ${id}`)?.fermee, "se référer soi-même ne compte pas");
-await fetch(`${APP}/api/r/${A.slug}/demande`, json({ contact: "Dany Client", entreprise: `Doublon ${id}`, metier: "Émondage", cellulaire: "(418) 555-2001", courriel: "", casseTete: "", moment: "mardi, midi" }));
+await fetch(`${APP}/api/r/${A.slug}/demande`, json({ contact: "Dany Client", entreprise: `Doublon ${id}`, metier: "Émondage", cellulaire: "(418) 555-2001", courriel: `prospect-${id}@test.local`, casseTete: "", moment: "mardi, midi" }));
 await relire();
-verifier(base().references.find((r) => r.entreprise === `Doublon ${id}`)?.fermee === "Déjà référée par un autre membre", "le premier qui réfère gagne");
+verifier(base().references.find((r) => r.entreprise === `Doublon ${id}`)?.fermee === "Déjà référée par un autre ambassadeur", "le premier qui réfère gagne");
 
 // 8. Supprimer un compte : jamais le compte d'un autre, toujours avec le mot écrit et le mot de passe.
 const supp = (temoin, corps, url = "/api/compte") => fetch(`${APP}${url}`, { method: "DELETE", headers: { "Content-Type": "application/json", ...(temoin ? { Cookie: temoin } : {}) }, body: JSON.stringify(corps) });

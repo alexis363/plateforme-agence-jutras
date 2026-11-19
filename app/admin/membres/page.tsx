@@ -10,11 +10,11 @@ export default async function Membres() {
 
   return (
     <>
-      <h1 className="titre">Les <em>membres</em></h1>
+      <h1 className="titre">Les <em>ambassadeurs</em></h1>
       <p className="sous">Les personnes inscrites au programme de référence. Un lien ne s'active qu'une fois le courriel confirmé.</p>
-      {liste.length === 0 ? <p className="vide">Aucun membre pour l'instant.</p> : (
+      {liste.length === 0 ? <p className="vide">Aucun ambassadeur pour l'instant.</p> : (
         <div className="table-defile"><table>
-          <thead><tr><th>Membre</th><th>Lien</th><th>Inscrit le</th><th>Visites</th><th>Demandes</th><th>Clients</th><th></th></tr></thead>
+          <thead><tr><th>Ambassadeur</th><th>Lien</th><th>Inscrit le</th><th>Visites du lien</th><th>Demandes de rendez-vous</th><th>Clients</th><th></th></tr></thead>
           <tbody>
             {liste.map((m) => {
               const refs = references.filter((r) => r.membreId === m.id);

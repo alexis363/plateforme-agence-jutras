@@ -16,7 +16,7 @@ export default async function EspaceMembre({ children }: { children: React.React
         { href: "/compte/services", texte: "Nos services", icone: "grille" },
         { href: "/compte/profil", texte: "Mon profil", icone: "personne" },
       ]}
-      pied={<div className="statut-compte"><b>Membre du programme de référence</b>Votre espace client s'ouvrira dès que vous achèterez un service.</div>}
+      pied={<div className="statut-compte"><b>Ambassadeur du programme de référence</b>Votre espace client s'ouvrira dès que vous achèterez un service.</div>}
     >
       {children}
     </Cadre>

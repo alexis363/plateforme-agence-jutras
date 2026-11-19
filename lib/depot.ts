@@ -89,10 +89,11 @@ const membreDe = (r: Ligne): Membre => ({
 });
 
 const refDe = (r: Ligne): Reference => ({
-  id: r.id as string, membreId: r.membre_id as string, entreprise: r.entreprise as string, contact: r.contact as string,
+  id: r.id as string, membreId: (r.membre_id as string) ?? null, entreprise: r.entreprise as string, contact: r.contact as string,
   metier: r.metier as string, cellulaire: r.cellulaire as string, courriel: r.courriel as string,
   casseTete: r.casse_tete as string, moment: r.moment as string, rendezVous: (r.rendez_vous as string) ?? null,
   evenementId: (r.evenement_id as string) ?? null, creeLe: r.cree_le as string, etape: r.etape as number,
+  source: r.source === "site" ? "site" : "lien",
   fermee: (r.fermee as string) ?? null, notes: r.notes as string, historique: (r.historique as Evenement[]) ?? [],
 });
 
@@ -385,11 +386,12 @@ export type NouvelleDemande = Pick<Reference, "entreprise" | "contact" | "metier
 
 // Le premier qui réfère gagne : une entreprise déjà référée (même cellulaire) dans les 6 derniers mois reste au premier.
 // Se référer soi-même ne compte pas. Dans les deux cas, la demande est gardée, mais fermée avec sa raison.
-function raisonFermeture(membre: Membre, d: NouvelleDemande, deja: { membreId: string } | undefined): string | null {
+function raisonFermeture(membre: Membre, d: NouvelleDemande, deja: { membreId: string | null } | undefined): string | null {
   const soiMeme = normaliserCellulaire(membre.cellulaire) === normaliserCellulaire(d.cellulaire)
     || (!!d.courriel && normaliserCourriel(d.courriel) === membre.courriel);
-  if (soiMeme) return "Le membre s'est référé lui-même";
-  if (deja) return deja.membreId === membre.id ? "Déjà référée par ce membre" : "Déjà référée par un autre membre";
+  if (soiMeme) return "L'ambassadeur s'est référé lui-même";
+  if (deja) return deja.membreId === membre.id ? "Déjà référée par cet ambassadeur"
+    : deja.membreId ? "Déjà référée par un autre ambassadeur" : "Déjà prospect : a réservé sur le site web";
   return null;
 }
 
@@ -398,8 +400,8 @@ export async function creerReference(membreId: string, d: NouvelleDemande): Prom
   const limite = new Date();
   limite.setMonth(limite.getMonth() - VALIDITE_MOIS);
   const historique = (fermee: string | null): Evenement[] => [
-    { le: maintenant(), quoi: fermee ? `Demande reçue, fermée : ${fermee}` : "Demande reçue par le lien" },
-    ...(d.rendezVous && !fermee ? [{ le: maintenant(), quoi: `Rencontre prévue le ${d.moment}` }] : []),
+    { le: maintenant(), quoi: fermee ? `Demande de rendez-vous, fermée : ${fermee}` : "Demande de rendez-vous par le lien" },
+    ...(d.rendezVous && !fermee ? [{ le: maintenant(), quoi: `Rendez-vous découverte prévu le ${d.moment}` }] : []),
   ];
 
   if (moteur() === "supabase") {
@@ -407,11 +409,11 @@ export async function creerReference(membreId: string, d: NouvelleDemande): Prom
     if (!membre?.confirme) throw new Error("Lien inactif");
     const deja = liste(await sb()!.from("refs").select("membre_id").eq("cellulaire_norm", cell).is("fermee", null)
       .gt("cree_le", limite.toISOString()).order("cree_le").limit(1))[0];
-    const fermee = raisonFermeture(membre, d, deja ? { membreId: deja.membre_id as string } : undefined);
+    const fermee = raisonFermeture(membre, d, deja ? { membreId: (deja.membre_id as string) ?? null } : undefined);
     const r = ok(await sb()!.from("refs").insert({
       membre_id: membreId, entreprise: d.entreprise, contact: d.contact, metier: d.metier, cellulaire: d.cellulaire,
       cellulaire_norm: cell, courriel: d.courriel, casse_tete: d.casseTete, moment: d.moment, rendez_vous: d.rendezVous,
-      evenement_id: d.evenementId, fermee, historique: historique(fermee),
+      evenement_id: d.evenementId, fermee, historique: historique(fermee), source: "lien",
     }).select("*").single());
     return refDe(r);
   }
@@ -421,7 +423,7 @@ export async function creerReference(membreId: string, d: NouvelleDemande): Prom
     if (!membre) throw new Error("Lien inactif");
     const deja = b.references.find((r) => !r.fermee && normaliserCellulaire(r.cellulaire) === cell && new Date(r.creeLe) > limite);
     const fermee = raisonFermeture(membre, d, deja);
-    const r: Reference = { id: randomUUID(), membreId, ...d, creeLe: maintenant(), etape: 1, fermee, notes: "", historique: historique(fermee) };
+    const r: Reference = { id: randomUUID(), membreId, source: "lien", ...d, creeLe: maintenant(), etape: 1, fermee, notes: "", historique: historique(fermee) };
     b.references.push(r);
     return r;
   });
@@ -430,18 +432,12 @@ export async function creerReference(membreId: string, d: NouvelleDemande): Prom
 // Les rendez-vous déjà pris par la plateforme (à partir d'une date) : ils bloquent leur plage même si
 // Google Agenda ne les montre pas encore. Seulement des heures : rien sur qui les a pris.
 export async function rendezVousPris(apres: string): Promise<string[]> {
+  // Depuis le 19 nov. 2026, les rendez-vous du site sont aussi dans refs (prospects « site »).
   if (moteur() === "supabase") {
-    const [r, s] = await Promise.all([
-      sb()!.from("refs").select("rendez_vous").gte("rendez_vous", apres),
-      sb()!.from("rdv_site").select("rendez_vous").gte("rendez_vous", apres),
-    ]);
-    // Tant que la table rdv_site n'existe pas (migration du 18 nov. 2026 pas encore exécutée), les liens de
-    // référence continuent de marcher : seuls leurs rendez-vous comptent.
-    if (s.error) console.error(`rdv_site : ${s.error.message}`);
-    return [...liste(r), ...(s.data ?? [])].map((x) => x.rendez_vous as string);
+    return liste(await sb()!.from("refs").select("rendez_vous").gte("rendez_vous", apres)).map((x) => x.rendez_vous as string);
   }
   const b = await lire();
-  return [...b.references, ...b.rdvSite].filter((r) => r.rendezVous && r.rendezVous >= apres).map((r) => r.rendezVous!);
+  return b.references.filter((r) => r.rendezVous && r.rendezVous >= apres).map((r) => r.rendezVous!);
 }
 
 // ---------- Réglages de l'agenda (lus par tous, écrits seulement par la console) ----------
@@ -466,41 +462,49 @@ export async function adminEcrireReglagesAgenda(r: ReglagesAgenda): Promise<void
   await ecrire((b) => { b.reglagesAgenda = r; });
 }
 
-// ---------- Rendez-vous pris sur le site web (sans lien de référence) ----------
+// ---------- Prospects venus par le site web (sans ambassadeur) ----------
 
-export async function creerRdvSite(d: Omit<RdvSite, "id" | "creeLe">): Promise<RdvSite> {
+// Depuis le 19 nov. 2026 : un rendez-vous pris sur le site devient un prospect comme les autres (table refs,
+// membre_id null, source « site »), avec les mêmes 6 étapes dans « Mes prospects ».
+export async function creerRdvSite(d: Omit<RdvSite, "id" | "creeLe">): Promise<Reference> {
+  const historique: Evenement[] = [
+    { le: maintenant(), quoi: "Demande de rendez-vous sur le site web" },
+    ...(d.rendezVous ? [{ le: maintenant(), quoi: `Rendez-vous découverte prévu le ${d.moment}` }] : []),
+  ];
   if (moteur() === "supabase") {
-    return rdvSiteDe(ok(await sb()!.from("rdv_site").insert({
-      entreprise: d.entreprise, contact: d.contact, metier: d.metier, cellulaire: d.cellulaire, courriel: d.courriel,
-      casse_tete: d.casseTete, moment: d.moment, rendez_vous: d.rendezVous, evenement_id: d.evenementId,
+    return refDe(ok(await sb()!.from("refs").insert({
+      membre_id: null, source: "site", entreprise: d.entreprise, contact: d.contact, metier: d.metier,
+      cellulaire: d.cellulaire, cellulaire_norm: normaliserCellulaire(d.cellulaire), courriel: d.courriel,
+      casse_tete: d.casseTete, moment: d.moment, rendez_vous: d.rendezVous, evenement_id: d.evenementId, historique,
     }).select("*").single()) as Ligne);
   }
   return ecrire((b) => {
-    const r: RdvSite = { id: randomUUID(), ...d, creeLe: maintenant() };
-    b.rdvSite.push(r);
+    const r: Reference = { id: randomUUID(), membreId: null, source: "site", ...d, creeLe: maintenant(), etape: 1, fermee: null, notes: "", historique };
+    b.references.push(r);
     return r;
   });
 }
 
 // ---------- Console d'admin (après exigerAdmin() seulement) ----------
 
-export async function adminTout(): Promise<Pick<Base, "membres" | "references" | "rdvSite" | "visites">> {
+export async function adminTout(): Promise<Pick<Base, "membres" | "references" | "visites">> {
   if (moteur() === "supabase") {
-    const [m, r, s, v] = await Promise.all([
+    const [m, r, v] = await Promise.all([
       sb()!.from("membres").select("*"),
       sb()!.from("refs").select("*"),
-      sb()!.from("rdv_site").select("*").gte("cree_le", new Date(Date.now() - 30 * 86400e3).toISOString()),
       sb()!.from("visites").select("membre_id, le"),
     ]);
     return {
       membres: liste(m).map(membreDe),
       references: liste(r).map(refDe),
-      rdvSite: liste(s).map(rdvSiteDe),
       visites: liste(v).map((x) => ({ membreId: x.membre_id as string, le: x.le as string })),
     };
   }
-  const { membres, references, rdvSite, visites } = await lire();
-  return { membres, references, rdvSite, visites };
+  // Le fichier local d'avant le 19 nov. 2026 gardait les rendez-vous du site à part : ils deviennent des prospects.
+  const { membres, references, rdvSite = [], visites } = await lire();
+  const duSite: Reference[] = rdvSite.map((s) => ({ ...s, membreId: null, source: "site", etape: 1, fermee: null, notes: "",
+    historique: [{ le: s.creeLe, quoi: "Demande de rendez-vous sur le site web" }] }));
+  return { membres, references: [...references.map((r) => ({ ...r, source: r.source ?? "lien" })), ...duSite], visites };
 }
 
 export async function adminMajReference(id: string, d: { etape?: number; fermee?: string | null; notes?: string; quoi?: string }): Promise<Reference | null> {

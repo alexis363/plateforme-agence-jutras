@@ -16,7 +16,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (!d.success) return Response.json({ erreur: "Données invalides" }, { status: 400 });
   const { id } = await params;
   // L'historique est visible par le membre : il ne reçoit que l'étape, jamais les notes ni la raison exacte.
-  const quoi = d.data.etape ? ETAPES[d.data.etape - 1] : d.data.fermee ? "Référence fermée" : d.data.fermee === null ? "Référence rouverte" : undefined;
+  const quoi = d.data.etape ? ETAPES[d.data.etape - 1] : d.data.fermee ? "Prospect fermé" : d.data.fermee === null ? "Prospect rouvert" : undefined;
   const r = await adminMajReference(id, { ...d.data, quoi });
   return r ? Response.json({ ok: true }) : Response.json({ erreur: "Introuvable" }, { status: 404 });
 }
@@ -30,7 +30,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   if (!d.success || d.data.confirmation.trim().toUpperCase() !== "SUPPRIMER")
     return Response.json({ erreur: "Écrivez SUPPRIMER pour confirmer." }, { status: 400 });
   const resultat = await adminSupprimerReference((await params).id);
-  if (resultat === "introuvable") return Response.json({ erreur: "Cette référence n'existe plus." }, { status: 404 });
-  if (resultat === "ouverte") return Response.json({ erreur: "Fermez la référence avant de la supprimer." }, { status: 409 });
+  if (resultat === "introuvable") return Response.json({ erreur: "Ce prospect n'existe plus." }, { status: 404 });
+  if (resultat === "ouverte") return Response.json({ erreur: "Fermez le prospect avant de le supprimer." }, { status: 409 });
   return Response.json({ ok: true });
 }
