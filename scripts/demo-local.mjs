@@ -12,7 +12,7 @@ const alexis = { id: randomUUID(), prenom: "Alexis", nom: "Jutras", cellulaire: 
 const sophie = { id: randomUUID(), prenom: "Sophie", nom: "Gagnon", cellulaire: "418-555-0177", courriel: "sophie@exemple.ca", slug: "sophie-g", motDePasse: hacher(), role: "membre", confirme: true, accepteRegles: jours(40), prenomVisible: true, creeLe: jours(40) };
 const luc = { id: randomUUID(), prenom: "Luc", nom: "Bérubé", cellulaire: "418-555-0190", courriel: "luc@exemple.ca", slug: "luc-b", motDePasse: hacher(), role: "membre", confirme: true, accepteRegles: jours(3), prenomVisible: true, creeLe: jours(3) };
 
-const ETAPES = ["Demande reçue", "Contacté", "Rencontre", "Devenu client", "Premier paiement", "Vous êtes payé"];
+const ETAPES = ["Demande de rendez-vous", "Rendez-vous découverte", "Rendez-vous d'installation", "Essai gratuit", "Client", "Ambassadeur payé"];
 const ref = (entreprise, contact, metier, cellulaire, il, etape, moment) => ({
   id: randomUUID(), membreId: sophie.id, entreprise, contact, metier, cellulaire, courriel: "", casseTete: "Les soumissions le soir.",
   moment, creeLe: jours(il), etape, fermee: null, notes: "",

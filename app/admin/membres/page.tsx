@@ -25,7 +25,7 @@ export default async function Membres() {
                   <td>{dateCourte(m.creeLe)}</td>
                   <td>{visites.filter((v) => v.membreId === m.id).length}</td>
                   <td>{refs.length}</td>
-                  <td>{refs.filter((r) => !r.fermee && r.etape >= 4).length}</td>
+                  <td>{refs.filter((r) => !r.fermee && r.etape >= 5).length}</td>
                   <td><SupprimerMembre id={m.id} nom={`${m.prenom} ${m.nom}`} courriel={m.courriel} nbReferences={refs.length} /></td>
                 </tr>
               );

@@ -5,14 +5,15 @@ export const RECOMPENSE = 100; // $ par entrepreneur devenu client
 export const VALIDITE_MOIS = 6; // une référence reste attribuée au membre pendant 6 mois
 export const PRODUIT = "Kairos Soumission"; // le programme couvre Kairos seulement
 
-// Les 6 étapes que voit le membre. Alexis fait avancer chaque référence depuis la console.
+// Les 6 étapes du cycle client (Alexis, 19 nov. 2026), les mêmes dans la console et l'espace membre.
+// Alexis fait avancer chaque référence depuis la console. À l'étape 5, la récompense est due (24 h).
 export const ETAPES = [
-  "Demande reçue",
-  "Contacté",
-  "Rencontre",
-  "Devenu client",
-  "Premier paiement",
-  "Vous êtes payé",
+  "Demande de rendez-vous",
+  "Rendez-vous découverte",
+  "Rendez-vous d'installation",
+  "Essai gratuit",
+  "Client",
+  "Ambassadeur payé",
 ] as const;
 
 // Places limitées de Kairos, par mois (« Prix et offres », 13 et 17 nov. 2026).

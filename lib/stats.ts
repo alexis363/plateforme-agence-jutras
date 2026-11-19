@@ -24,15 +24,13 @@ export function chiffresMembre(visites: string[], refs: Reference[]) {
   return {
     visites: visites.length,
     demandes: refs.length,
-    contactes: atteint(2),
-    rencontres: atteint(3),
-    clients: atteint(4),
-    // Étape 4 « Devenu client » = Kairos installé, mois d'essai gratuit ; étape 5 = premier paiement.
-    // Compté comme un entonnoir : ceux qui ont commencé l'essai, y compris ceux qui paient déjà.
+    // Les étapes (lib/regles.ts, 19 nov. 2026) : 2 découverte, 3 installation, 4 essai gratuit, 5 client, 6 payé.
+    // Compté comme un entonnoir : chaque nombre inclut ceux qui sont allés plus loin.
+    rencontres: atteint(2),
     enEssai: atteint(4),
     payants: atteint(5),
     verses: atteint(6),
     recu: atteint(6) * RECOMPENSE,
-    aVenir: (atteint(4) - atteint(6)) * RECOMPENSE,
+    aVenir: (atteint(5) - atteint(6)) * RECOMPENSE, // dû dès que l'entrepreneur est client (étape 5)
   };
 }

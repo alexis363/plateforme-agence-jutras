@@ -20,8 +20,8 @@ export default async function MesReferences() {
   const semaines = visitesParSemaine(visites);
   const max = Math.max(1, ...semaines.map((s) => s.nombre));
   const entonnoir: [string, number][] = [
-    // Demande d'Alexis du 19 nov. 2026 : plus de « Contactés » ; l'essai gratuit (étape 4) avant « Devenus clients »
-    // (étape 5, premier paiement).
+    // Demande d'Alexis du 19 nov. 2026 : plus de « Contactés » ; « Rencontrés » = rendez-vous découverte (étape 2),
+    // l'essai gratuit (étape 4) avant « Devenus clients » (étape 5).
     ["Visites du lien", c.visites], ["Demandes", c.demandes], ["Rencontrés", c.rencontres],
     ["En cours d'essai gratuit", c.enEssai], ["Devenus clients", c.payants], ["Récompenses versées", c.verses],
   ];

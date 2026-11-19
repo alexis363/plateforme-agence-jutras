@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ETAPES } from "@/lib/regles.ts";
 
-const ETAPES = ["Demande reçue", "Contacté", "Rencontre", "Devenu client", "Premier paiement", "Ambassadeur payé"];
 
 export default function Actions({ id, etape, fermee, notes }: { id: string; etape: number; fermee: string | null; notes: string }) {
   const router = useRouter();
