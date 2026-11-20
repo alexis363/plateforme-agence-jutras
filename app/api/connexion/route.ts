@@ -39,8 +39,10 @@ export async function POST(req: Request) {
     await envoyerCourriel({
       a: m.courriel,
       sujet: "Confirmez votre courriel pour activer votre lien",
-      texte: `Bonjour ${m.prenom}, confirmez votre courriel pour activer votre compte et votre lien personnel.`,
+      texte: `Bonjour ${m.prenom}, confirmez votre courriel pour activer votre compte et votre lien personnel du programme ambassadeur Kairos.`,
       lien: `${adresseApp()}/api/verifier?jeton=${jeton}`,
+      kairos: true,
+      bouton: "Confirmer mon courriel",
     });
     return Response.json({ erreur: "Confirmez d'abord votre courriel : on vient de vous renvoyer le lien." }, { status: 403 });
   }

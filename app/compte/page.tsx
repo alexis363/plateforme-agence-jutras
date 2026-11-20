@@ -29,7 +29,7 @@ export default async function AccueilMembre() {
     <>
       <div className="haut-membre">
         <div>
-          <h1 className="titre">Bonjour {m.prenom}, <em>merci de parler de nous.</em></h1>
+          <h1 className="titre">Bonjour {m.prenom}, <em>prêt à parler de Kairos Soumission&nbsp;?</em></h1>
           <p className="sous">Vous présentez un entrepreneur ; s'il devient client de Kairos, vous recevez {RECOMPENSE} $.</p>
         </div>
         <div className="chiffre argent argent-haut"><b>{c.recu} $</b><span>reçus{c.aVenir ? ` · ${c.aVenir} $ à venir` : ""}</span></div>

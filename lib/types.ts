@@ -70,7 +70,8 @@ export type Jeton = {
   utilise: boolean;
 };
 
-export type CourrielLocal = { a: string; sujet: string; texte: string; lien: string | null; le: string };
+// kairos : courriel du programme ambassadeur, envoyé avec l'en-tête Kairos (20 nov. 2026).
+export type CourrielLocal = { a: string; sujet: string; texte: string; lien: string | null; le: string; kairos?: boolean };
 
 export type Base = {
   membres: Membre[];

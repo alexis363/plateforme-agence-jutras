@@ -48,11 +48,11 @@ export default function Formulaire({ local }: { local: boolean }) {
         <label className="champ"><span>Encore une fois</span><input name="motDePasse2" type="password" required minLength={10} autoComplete="new-password" /></label>
       </div>
       <p className="note" style={{ margin: "-6px 0 14px" }}>Au moins 10 caractères. Une courte phrase se retient mieux qu'un mot compliqué.</p>
-      <label className="case"><input type="checkbox" name="regles" /> J'accepte les <a href="/regles" target="_blank">règles du programme de référence</a>.</label>
+      <label className="case"><input type="checkbox" name="regles" /> J'accepte les <a href="/regles" target="_blank">règles du programme ambassadeur Kairos</a>.</label>
       <label className="case"><input type="checkbox" name="prenomVisible" defaultChecked /> Mon prénom peut apparaître sur la page de mon lien (« Sophie vous recommande l'Agence Jutras »).</label>
       <button className="btn" disabled={etat === "envoi"}>{etat === "envoi" ? "Envoi…" : "Obtenir mon lien"}</button>
       <p className="erreur" role="alert">{erreur}</p>
-      <p className="note" style={{ margin: 0 }}>Vos renseignements servent seulement au programme de référence et à vous verser vos récompenses.</p>
+      <p className="note" style={{ margin: 0 }}>Vos renseignements servent seulement au programme ambassadeur Kairos et à vous verser vos récompenses.</p>
     </form>
   );
 }

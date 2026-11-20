@@ -35,8 +35,10 @@ export async function POST(req: Request) {
     await envoyerCourriel({
       a: m.courriel,
       sujet: "Confirmez votre courriel pour activer votre lien",
-      texte: `Bonjour ${m.prenom}, merci de vous joindre au programme de référence de l'Agence Jutras. Confirmez votre courriel pour activer votre lien personnel. Ce courriel servira aussi à vous verser vos récompenses par virement Interac.`,
+      texte: `Bonjour ${m.prenom}, merci de vous joindre au programme ambassadeur Kairos de l'Agence Jutras. Confirmez votre courriel pour activer votre lien personnel. Ce courriel servira aussi à vous verser vos récompenses par virement Interac.`,
       lien: `${adresseApp()}/api/verifier?jeton=${jeton}`,
+      kairos: true,
+      bouton: "Confirmer mon courriel",
     });
   }
   return Response.json({ ok: true });

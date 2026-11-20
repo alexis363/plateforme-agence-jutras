@@ -8,7 +8,8 @@ import { momentCourt } from "@/lib/agenda.ts";
 function statut(r: Reference): [string, string] {
   if (r.fermee) return ["Fermée", "p-neutre"];
   if (r.etape === 6) return [ETAPES[5], "p-ok"];
-  if (r.etape === 5) return [`Vos ${RECOMPENSE} $ partent dans les 24 h`, "p-cours"];
+  // Étape 5 : l'entrepreneur est devenu client de Kairos, en olive (20 nov. 2026).
+  if (r.etape === 5) return [`Client Kairos · vos ${RECOMPENSE} $ partent dans les 24 h`, "p-kairos"];
   if (r.etape <= 2 && r.rendezVous) return [`${ETAPES[1]} le ${momentCourt(r.rendezVous)}`, "p-cours"];
   return [ETAPES[r.etape - 1], r.etape === 1 ? "p-neutre" : "p-cours"];
 }
@@ -63,7 +64,7 @@ export default async function MesReferences() {
             </div>
             {!r.fermee && (
               <div className="etapes">
-                {ETAPES.map((e, i) => <span key={e} className={`${i < r.etape ? "fait" : ""}${i === r.etape - 1 ? " ici" : ""}`}>{e}</span>)}
+                {ETAPES.map((e, i) => <span key={e} className={`${i < r.etape ? "fait" : ""}${i === r.etape - 1 ? " ici" : ""}${i === 4 ? " kairos" : ""}`}>{e}</span>)}
               </div>
             )}
           </div>

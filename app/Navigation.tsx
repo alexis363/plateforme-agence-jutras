@@ -3,7 +3,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 
-export type Entree = { href: string; texte: string; icone: string; groupe?: string; bientot?: boolean; nb?: number };
+// kairos : une entrée du programme ambassadeur Kairos (titre de groupe et onglet actif en olive, 20 nov. 2026).
+export type Entree = { href: string; texte: string; icone: string; groupe?: string; bientot?: boolean; nb?: number; kairos?: boolean };
 
 const ICONES: Record<string, string> = {
   accueil: "M4 11 12 4l8 7v9h-5v-6H9v6H4Z",
@@ -41,12 +42,12 @@ export default function Navigation({ entrees, pied }: { entrees: Entree[]; pied?
   return (
     <nav className={`cote${ouvert ? " ouvert" : ""}`} aria-label="Menu">
       {entrees.map((e) => {
-        const titre = e.groupe && e.groupe !== groupe ? <div className="groupe">{e.groupe}</div> : null;
+        const titre = e.groupe && e.groupe !== groupe ? <div className={`groupe${e.kairos ? " kairos" : ""}`}>{e.groupe}</div> : null;
         groupe = e.groupe;
         return (
           <span key={e.href} style={{ display: "contents" }}>
             {titre}
-            <Link href={e.href} className={`${actif(e.href) ? "actif" : ""}${e.bientot ? " bientot" : ""}`} aria-disabled={e.bientot}>
+            <Link href={e.href} className={`${actif(e.href) ? "actif" : ""}${e.bientot ? " bientot" : ""}${e.kairos ? " kairos" : ""}`} aria-disabled={e.bientot}>
               <Icone nom={e.icone} />{e.texte}
               {e.bientot ? <small>Bientôt</small> : e.nb ? <span className="nb">{e.nb}</span> : null}
             </Link>

@@ -11,10 +11,17 @@ export default function Regles() {
     ["On ne se réfère pas soi-même", "Votre propre entreprise ne compte pas."],
   ];
   return (
+    <>
+    {/* Bandeau Kairos en tête des règles (20 nov. 2026) : on sait tout de suite à quel produit elles s'appliquent. */}
+    <div className="regles-kairos">
+      <div><h2>Programme ambassadeur <em>Kairos Soumission</em></h2><p>Les règles s'appliquent aux entrepreneurs qui deviennent clients de Kairos.</p></div>
+      <span className="logo-kairos" aria-label="Kairos Soumission"><small>AGENCE JUTRAS</small><b>KAIROS</b><i aria-hidden="true" /><small>SOUMISSION</small></span>
+    </div>
     <div className="bloc" style={{ maxWidth: 720 }}>
       {regles.map(([titre, detail], i) => (
         <div className="ligne" key={i}><span className="n">{i + 1}</span><div><b>{titre}</b><small>{detail}</small></div></div>
       ))}
     </div>
+    </>
   );
 }

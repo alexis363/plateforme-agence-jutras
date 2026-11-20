@@ -201,7 +201,7 @@ export async function creerRendezVous(r: Rdv): Promise<string | null> {
     r.casseTete ? `Son plus gros casse-tête : ${r.casseTete}` : "",
     "",
     r.ambassadeur
-      ? "Alexis vous appelle au numéro ci-dessus. Pris par le programme de référence de l'Agence Jutras."
+      ? "Alexis vous appelle au numéro ci-dessus. Pris par le programme ambassadeur Kairos de l'Agence Jutras."
       : "Alexis vous appelle au numéro ci-dessus.",
   ].filter((l, i, t) => l || i === t.length - 2).join("\n");
   const rep = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${calendrier()}/events?sendUpdates=all`, {

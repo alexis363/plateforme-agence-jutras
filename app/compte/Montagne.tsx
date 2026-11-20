@@ -86,7 +86,7 @@ export default function Montagne({ grimpeurs, visites }: { grimpeurs: Grimpeur[]
         <span className="nuage lent" style={{ left: pct(520, W), top: pct(196, H), width: pct(90, W), height: pct(20, H) }} />
 
         <div className="sommet" style={{ left: pct(SOMMET.x, W), top: pct(SOMMET.y, H) }}>
-          <i className="mat" /><i className="drapeau" />
+          <i className="mat" /><i className="drapeau">KAIROS</i>
           <span className={`refuge-nom${atteint(6) ? " atteint" : ""}`}>6 · Sommet · {RECOMPENSE} $ <small>{parEtape[5]}</small></span>
         </div>
 
