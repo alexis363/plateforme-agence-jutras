@@ -3,7 +3,7 @@
 // d'après la maquette Claude Design « Montagne des ambassadeurs ») : chaque référence active est
 // un grimpeur posé au refuge de son étape ; le sommet, c'est la récompense versée.
 // Les positions sont en % de la scène (780 × 600), pour qu'elle suive la largeur de l'écran.
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ETAPES, RECOMPENSE } from "@/lib/regles.ts";
 
 // Seulement le prénom de la référence sur la montagne, jamais le nom de l'entreprise (Alexis, 19 nov. 2026).
@@ -20,12 +20,42 @@ const REFUGES = [
   { x: 330, y: 252 },
 ];
 const SOMMET = { x: 390, y: 84 };
+// Ce que veut dire chaque étape, dans la bulle qui s'ouvre quand on touche son étiquette (Alexis, 20 nov. 2026).
+const EXPLICATIONS = [
+  "L'entrepreneur a rempli sa demande par votre lien et choisi une plage de 15 minutes. Elle vous est attribuée.",
+  "Alexis le rencontre 15 minutes sur Google Meet pour comprendre ce qui lui prend le plus de temps.",
+  "Kairos est installé et adapté à son entreprise : ses demandes, sa tournée de visites, ses devis.",
+  "Il utilise Kairos gratuitement pendant son premier mois, pour voir si ça lui convient.",
+  `Il continue après son essai et fait son premier paiement. Vos ${RECOMPENSE} $ partent dans les 24 h.`,
+  `Vos ${RECOMPENSE} $ vous ont été versés par virement Interac. Merci de parler de Kairos !`,
+];
 // Écarts autour d'un refuge, pour que plusieurs grimpeurs au même endroit ne se cachent pas.
 const ECARTS = [[-34, 4], [34, 2], [-62, 8], [62, 6], [-8, 22], [20, -18]];
 const pct = (v: number, total: number) => `${((v / total) * 100).toFixed(2)}%`;
 
 export default function Montagne({ grimpeurs, visites }: { grimpeurs: Grimpeur[]; visites: number }) {
   const [choisi, setChoisi] = useState(grimpeurs[0]?.id ?? null);
+  const [info, setInfo] = useState<number | null>(null); // l'étape dont la bulle est ouverte (0 à 5)
+  useEffect(() => {
+    if (info === null) return;
+    const fermer = (e: KeyboardEvent | MouseEvent) => {
+      if (e instanceof KeyboardEvent ? e.key === "Escape" : !(e.target as HTMLElement).closest(".refuge-nom, .etape-info")) setInfo(null);
+    };
+    window.addEventListener("keydown", fermer);
+    window.addEventListener("click", fermer);
+    return () => { window.removeEventListener("keydown", fermer); window.removeEventListener("click", fermer); };
+  }, [info]);
+  const basculer = (i: number) => setInfo((v) => (v === i ? null : i));
+  // La bulle se place sous l'étiquette, du même côté qu'elle.
+  const placeBulle = (i: number): React.CSSProperties => {
+    if (i === 5) return { left: `calc(${pct(SOMMET.x, W)} + 10px)`, top: `calc(${pct(SOMMET.y, H)} - 24px)` };
+    const r = REFUGES[i];
+    // Dans le bas de la montagne, la bulle s'ouvre au-dessus de l'étiquette pour ne pas être coupée.
+    const vertical = r.y > H * 0.6 ? { bottom: `calc(${pct(H - r.y, H)} + 38px)` } : { top: `calc(${pct(r.y, H)} + 4px)` };
+    return r.x > W / 2
+      ? { right: `calc(${pct(W - r.x, W)} + 28px)`, ...vertical }
+      : { left: `calc(${pct(r.x, W)} + 28px)`, ...vertical };
+  };
   const parEtape = [0, 0, 0, 0, 0, 0];
   const rang = new Map<string, number>();
   for (const g of grimpeurs) {
@@ -87,17 +117,29 @@ export default function Montagne({ grimpeurs, visites }: { grimpeurs: Grimpeur[]
 
         <div className="sommet" style={{ left: pct(SOMMET.x, W), top: pct(SOMMET.y, H) }}>
           <i className="mat" /><i className="drapeau">KAIROS</i>
-          <span className={`refuge-nom${atteint(6) ? " atteint" : ""}`}>6 · Sommet · {RECOMPENSE} $ <small>{parEtape[5]}</small></span>
+          <button type="button" className={`refuge-nom${atteint(6) ? " atteint" : ""}${info === 5 ? " ouvert" : ""}`} onClick={() => basculer(5)} aria-expanded={info === 5}>
+            <span className="rn-num">6</span><span className="rn-texte"> · Sommet · {RECOMPENSE} $ <small>{parEtape[5]}</small></span>
+          </button>
         </div>
 
         {REFUGES.map((r, i) => (
-          <span key={i} className={`refuge-nom${atteint(i + 1) ? " atteint" : ""}`}
+          <button type="button" key={i} className={`refuge-nom${atteint(i + 1) ? " atteint" : ""}${info === i ? " ouvert" : ""}`}
+            onClick={() => basculer(i)} aria-expanded={info === i}
             style={r.x > W / 2
               ? { right: `calc(${pct(W - r.x, W)} + 28px)`, top: `calc(${pct(r.y, H)} - 32px)` }
               : { left: `calc(${pct(r.x, W)} + 28px)`, top: `calc(${pct(r.y, H)} - 32px)` }}>
-            {i + 1} · {ETAPES[i]} <small>{parEtape[i]}</small>
-          </span>
+            <span className="rn-num">{i + 1}</span><span className="rn-texte"> · {ETAPES[i]} <small>{parEtape[i]}</small></span>
+          </button>
         ))}
+
+        {info !== null && (
+          <div className="etape-info" role="dialog" aria-label={ETAPES[info]} style={placeBulle(info)}>
+            <button type="button" className="ei-fermer" onClick={() => setInfo(null)} aria-label="Fermer">×</button>
+            <span className="ei-etape">Étape {info + 1} sur 6 · {parEtape[info]} grimpeur{parEtape[info] > 1 ? "s" : ""}</span>
+            <b>{ETAPES[info]}</b>
+            <p>{EXPLICATIONS[info]}</p>
+          </div>
+        )}
 
         {grimpeurs.map((x, k) => {
           const base = x.etape >= 6 ? SOMMET : REFUGES[x.etape - 1];

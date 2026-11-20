@@ -3,8 +3,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 
-// kairos : une entrée du programme ambassadeur Kairos (titre de groupe et onglet actif en olive, 20 nov. 2026).
-export type Entree = { href: string; texte: string; icone: string; groupe?: string; bientot?: boolean; nb?: number; kairos?: boolean };
+// kairos : une entrée du programme ambassadeur Kairos, regroupée dans une cellule aux couleurs de Kairos ;
+// agence : une entrée de « Mon compte », dans une cellule aux couleurs de l'agence (20 nov. 2026).
+export type Entree = { href: string; texte: string; icone: string; groupe?: string; bientot?: boolean; nb?: number; kairos?: boolean; agence?: boolean };
 
 const ICONES: Record<string, string> = {
   accueil: "M4 11 12 4l8 7v9h-5v-6H9v6H4Z",
@@ -38,22 +39,47 @@ export default function Navigation({ entrees, pied }: { entrees: Entree[]; pied?
   }, []);
 
   const actif = (href: string) => chemin === href || (href.split("/").length > 2 && chemin.startsWith(href + "/"));
-  let groupe: string | undefined;
+  const lien = (e: Entree) => (
+    <Link key={e.href} href={e.href} className={`${actif(e.href) ? "actif" : ""}${e.bientot ? " bientot" : ""}${e.kairos ? " kairos" : ""}`} aria-disabled={e.bientot}>
+      <Icone nom={e.icone} />{e.texte}
+      {e.bientot ? <small>Bientôt</small> : e.nb ? <span className="nb">{e.nb}</span> : null}
+    </Link>
+  );
+
+  // Les entrées sont regroupées par « groupe ». Le groupe Kairos devient une cellule aux couleurs de Kairos,
+  // avec son logo (Alexis, 20 nov. 2026) : on voit d'un coup ce qui concerne Kairos.
+  const blocs: { groupe?: string; kairos: boolean; agence: boolean; entrees: Entree[] }[] = [];
+  for (const e of entrees) {
+    const dernier = blocs.at(-1);
+    if (dernier && dernier.groupe === e.groupe) dernier.entrees.push(e);
+    else blocs.push({ groupe: e.groupe, kairos: !!e.kairos, agence: !!e.agence, entrees: [e] });
+  }
   return (
     <nav className={`cote${ouvert ? " ouvert" : ""}`} aria-label="Menu">
-      {entrees.map((e) => {
-        const titre = e.groupe && e.groupe !== groupe ? <div className={`groupe${e.kairos ? " kairos" : ""}`}>{e.groupe}</div> : null;
-        groupe = e.groupe;
-        return (
-          <span key={e.href} style={{ display: "contents" }}>
-            {titre}
-            <Link href={e.href} className={`${actif(e.href) ? "actif" : ""}${e.bientot ? " bientot" : ""}${e.kairos ? " kairos" : ""}`} aria-disabled={e.bientot}>
-              <Icone nom={e.icone} />{e.texte}
-              {e.bientot ? <small>Bientôt</small> : e.nb ? <span className="nb">{e.nb}</span> : null}
-            </Link>
+      {blocs.map((b, i) =>
+        b.kairos ? (
+          <div key={b.groupe ?? i} className="cellule-kairos" role="group" aria-label={b.groupe}>
+            <div className="ck-tete" aria-hidden="true">
+              <span className="logo-kairos"><small>AGENCE JUTRAS</small><b>KAIROS</b><i /><small>SOUMISSION</small></span>
+              <span className="ck-sous">{b.groupe}</span>
+            </div>
+            {b.entrees.map(lien)}
+          </div>
+        ) : b.agence ? (
+          <div key={b.groupe ?? i} className="cellule-agence" role="group" aria-label={b.groupe}>
+            <div className="ca-tete" aria-hidden="true">
+              <span className="ca-marque"><i /><span className="wordmark">AGENCE JUTRAS</span></span>
+              <span className="ca-sous">{b.groupe}</span>
+            </div>
+            {b.entrees.map(lien)}
+          </div>
+        ) : (
+          <span key={b.groupe ?? i} style={{ display: "contents" }}>
+            {b.groupe && <div className="groupe">{b.groupe}</div>}
+            {b.entrees.map(lien)}
           </span>
-        );
-      })}
+        ),
+      )}
       {pied}
     </nav>
   );
