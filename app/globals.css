@@ -396,7 +396,8 @@ nav.cote .groupe.kairos::before{content:"";width:8px;height:8px;border-radius:50
 nav.cote a.kairos.actif{box-shadow:inset 3px 0 0 var(--k-olive)}
 .badge-kairos{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;background:var(--k-fondu);color:var(--k-texte);border-radius:999px;padding:6px 12px 6px 9px;font-size:12px;font-weight:500;margin-bottom:8px}
 .badge-kairos b{display:inline;color:var(--k-texte);font-family:"Playfair Display",serif;font-style:italic;font-weight:900;font-size:15px;letter-spacing:-.02em}
-.statut-compte{display:flex;flex-direction:column}
+/* Le pied du menu reste collé sous la cellule « Mon compte », quelle que soit la hauteur de la page (Alexis, 20 nov. 2026). */
+.statut-compte{display:flex;flex-direction:column;margin-top:14px}
 .sommet .drapeau{background:var(--k-olive);width:66px;color:var(--k-texte);font-family:"Playfair Display",serif;font-style:italic;font-weight:900;font-size:13px;letter-spacing:-.01em;display:grid;place-items:center;padding-right:4px}
 .sommet .refuge-nom{left:76px}
 .regles-kairos{position:relative;overflow:hidden;max-width:720px;margin-bottom:16px;padding:24px 26px;border-radius:var(--r-grand);background:var(--k-fondu);color:var(--k-texte);display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
