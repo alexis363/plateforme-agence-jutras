@@ -16,11 +16,10 @@ export default async function EspaceMembre({ children }: { children: React.React
         { href: "/compte/comment-ca-fonctionne", texte: "Comment ça fonctionne", icone: "aide", groupe: "Ambassadeur Kairos", kairos: true },
         { href: "/compte/references", texte: "Mes références", icone: "lien", groupe: "Ambassadeur Kairos", kairos: true },
         { href: "/compte/qui-referer", texte: "Qui référer ?", icone: "etoile", groupe: "Ambassadeur Kairos", kairos: true },
-        { href: "/compte/regles", texte: "Les règles", icone: "doc", groupe: "Ambassadeur Kairos", kairos: true },
         { href: "/compte/services", texte: "Nos services", icone: "grille", groupe: "Mon compte", agence: true },
         { href: "/compte/profil", texte: "Mon profil", icone: "personne", groupe: "Mon compte", agence: true },
       ]}
-      pied={<div className="statut-compte"><span className="badge-kairos"><b>Kairos</b>Ambassadeur</span>Votre espace client s'ouvrira dès que vous achèterez un service.</div>}
+      pied={<div className="statut-compte"><span className="badge-kairos"><b>Kairos</b>Ambassadeur</span>Ton espace client s'ouvrira dès que tu achèteras un service.</div>}
     >
       {children}
     </Cadre>

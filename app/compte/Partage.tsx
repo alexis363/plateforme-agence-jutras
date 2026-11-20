@@ -11,9 +11,9 @@ export default function Partage({ url, affiche, slug }: { url: string; affiche: 
   async function copier() {
     try {
       await navigator.clipboard.writeText(url);
-      setMsg("Lien copié. Collez-le dans un texto ou un message.");
+      setMsg("Lien copié. Colle-le dans un texto ou un message.");
     } catch {
-      setMsg(`Copiez ce lien : ${url}`);
+      setMsg(`Copie ce lien : ${url}`);
     }
     setTimeout(() => setMsg(""), 4000);
   }

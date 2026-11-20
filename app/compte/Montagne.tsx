@@ -22,12 +22,12 @@ const REFUGES = [
 const SOMMET = { x: 390, y: 84 };
 // Ce que veut dire chaque étape, dans la bulle qui s'ouvre quand on touche son étiquette (Alexis, 20 nov. 2026).
 const EXPLICATIONS = [
-  "L'entrepreneur a rempli sa demande par votre lien et choisi une plage de 15 minutes. Elle vous est attribuée.",
+  "L'entrepreneur a rempli sa demande par ton lien et choisi une plage de 15 minutes. Elle t'est attribuée.",
   "Alexis le rencontre 15 minutes sur Google Meet pour comprendre ce qui lui prend le plus de temps.",
   "Kairos est installé et adapté à son entreprise : ses demandes, sa tournée de visites, ses devis.",
   "Il utilise Kairos gratuitement pendant son premier mois, pour voir si ça lui convient.",
-  `Il continue après son essai et fait son premier paiement. Vos ${RECOMPENSE} $ partent dans les 24 h.`,
-  `Vos ${RECOMPENSE} $ vous ont été versés par virement Interac. Merci de parler de Kairos !`,
+  `Il continue après son essai et fait son premier paiement. Tes ${RECOMPENSE} $ partent dans les 24 h.`,
+  `Tes ${RECOMPENSE} $ t'ont été versés par virement Interac. Merci de parler de Kairos !`,
 ];
 // Écarts autour d'un refuge, pour que plusieurs grimpeurs au même endroit ne se cachent pas.
 const ECARTS = [[-34, 4], [34, 2], [-62, 8], [62, 6], [-8, 22], [20, -18]];
@@ -179,11 +179,11 @@ export default function Montagne({ grimpeurs, visites }: { grimpeurs: Grimpeur[]
           </>
         ) : (
           <>
-            <p className="mf-etape">Votre première cordée</p>
-            <p className="mf-nouvelle">Dès qu'un entrepreneur remplit sa demande par votre lien, il apparaît au pied de la montagne. Il monte d'un refuge à chaque étape, jusqu'au sommet : vos {RECOMPENSE} $.</p>
+            <p className="mf-etape">Ta première cordée</p>
+            <p className="mf-nouvelle">Dès qu'un entrepreneur remplit sa demande par ton lien, il apparaît au pied de la montagne. Il monte d'un refuge à chaque étape, jusqu'au sommet : tes {RECOMPENSE} $.</p>
           </>
         )}
-        <p className="note">Touchez un grimpeur pour voir où il est rendu. Vos {RECOMPENSE} $ sont versés dans les 24 h suivant son premier paiement.</p>
+        <p className="note">Touche un grimpeur pour voir où il est rendu. Tes {RECOMPENSE} $ sont versés dans les 24 h suivant son premier paiement.</p>
       </div>
     </div>
   );

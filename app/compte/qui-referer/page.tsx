@@ -10,7 +10,7 @@ export default async function QuiReferer() {
   return (
     <>
       <h1 className="titre">Qui <em>référer</em> ?</h1>
-      <p className="sous">Faites défiler les métiers. Vous pensez à quelqu'un ? Glissez la carte vers la droite : votre message est prêt à envoyer avec votre lien.</p>
+      <p className="sous">Fais défiler les métiers. Tu penses à quelqu'un ? Glisse la carte vers la droite : ton message est prêt à envoyer avec ton lien.</p>
       <Paquet lien={lien.url} />
     </>
   );

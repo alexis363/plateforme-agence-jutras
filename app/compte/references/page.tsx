@@ -9,7 +9,7 @@ function statut(r: Reference): [string, string] {
   if (r.fermee) return ["Fermée", "p-neutre"];
   if (r.etape === 6) return [ETAPES[5], "p-ok"];
   // Étape 5 : l'entrepreneur est devenu client de Kairos, en olive (20 nov. 2026).
-  if (r.etape === 5) return [`Client Kairos · vos ${RECOMPENSE} $ partent dans les 24 h`, "p-kairos"];
+  if (r.etape === 5) return [`Client Kairos · tes ${RECOMPENSE} $ partent dans les 24 h`, "p-kairos"];
   if (r.etape <= 2 && r.rendezVous) return [`${ETAPES[1]} le ${momentCourt(r.rendezVous)}`, "p-cours"];
   return [ETAPES[r.etape - 1], r.etape === 1 ? "p-neutre" : "p-cours"];
 }
@@ -30,10 +30,10 @@ export default async function MesReferences() {
   return (
     <>
       <h1 className="titre">Mes <em>références</em></h1>
-      <p className="sous">Où en est chaque entrepreneur que vous avez présenté.</p>
+      <p className="sous">Où en est chaque entrepreneur que tu as présenté.</p>
       <div className="deux">
         <div className="bloc">
-          <h2>Visites de votre lien</h2>
+          <h2>Visites de ton lien</h2>
           <p className="note" style={{ margin: "-6px 0 0" }}>Les 8 dernières semaines</p>
           <div className="graph">
             {semaines.map((s, i) => <div key={i}><span>{s.nombre}</span><i style={{ height: `${(s.nombre / max) * 100}%` }} /></div>)}
@@ -51,9 +51,9 @@ export default async function MesReferences() {
       </div>
 
       <h2 style={{ fontSize: 22, margin: "28px 0 14px" }}>
-        {refs.length === 0 ? "Aucune référence pour l'instant" : `Vos ${refs.length} référence${refs.length > 1 ? "s" : ""}`}
+        {refs.length === 0 ? "Aucune référence pour l'instant" : `Tes ${refs.length} référence${refs.length > 1 ? "s" : ""}`}
       </h2>
-      {refs.length === 0 && <p className="vide">Partagez votre lien : chaque demande de rendez-vous faite par ce lien apparaîtra ici, avec son avancement.</p>}
+      {refs.length === 0 && <p className="vide">Partage ton lien : chaque demande de rendez-vous faite par ce lien apparaîtra ici, avec son avancement.</p>}
       {refs.map((r) => {
         const [texte, classe] = statut(r);
         return (

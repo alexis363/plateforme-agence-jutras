@@ -17,7 +17,7 @@ export default function FormulaireProfil(p: { prenom: string; nom: string; cellu
       body: JSON.stringify({ prenom: f.get("prenom"), nom: f.get("nom"), cellulaire: f.get("cellulaire"), prenomVisible: f.get("prenomVisible") === "on" }),
     });
     setOccupe(false);
-    setMsg(rep.ok ? "✓ Enregistré" : "Vérifiez les champs, puis réessayez.");
+    setMsg(rep.ok ? "✓ Enregistré" : "Vérifie les champs, puis réessaie.");
     if (rep.ok) router.refresh();
   }
 

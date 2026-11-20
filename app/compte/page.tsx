@@ -22,7 +22,7 @@ export default async function AccueilMembre() {
     .filter((r) => !r.fermee)
     .map((r) => {
       const derniere = [...r.historique].sort((a, b) => b.le.localeCompare(a.le))[0];
-      return { id: r.id, prenom: r.contact.trim().split(/\s+/)[0] || "Votre référence", etape: r.etape, nouvelle: derniere ? `${derniere.quoi} · ${dateCourte(derniere.le)}` : "" };
+      return { id: r.id, prenom: r.contact.trim().split(/\s+/)[0] || "Ta référence", etape: r.etape, nouvelle: derniere ? `${derniere.quoi} · ${dateCourte(derniere.le)}` : "" };
     });
 
   return (
@@ -30,14 +30,14 @@ export default async function AccueilMembre() {
       <div className="haut-membre">
         <div>
           <h1 className="titre">Bonjour {m.prenom}, <em>prêt à parler de Kairos Soumission&nbsp;?</em></h1>
-          <p className="sous">Vous présentez un entrepreneur ; s'il devient client de Kairos, vous recevez {RECOMPENSE} $.</p>
+          <p className="sous">Tu présentes un entrepreneur ; s'il devient client de Kairos, tu reçois {RECOMPENSE} $.</p>
         </div>
         <div className="chiffre argent argent-haut"><b>{c.recu} $</b><span>reçus{c.aVenir ? ` · ${c.aVenir} $ à venir` : ""}</span></div>
       </div>
 
       <div className="lien-carte">
-        <h2>Votre lien <em>personnel</em></h2>
-        <p>Envoyez-le à un entrepreneur qui passe ses soirées dans la paperasse. Quand il remplit sa demande par ce lien, elle vous est attribuée automatiquement.</p>
+        <h2>Ton lien <em>personnel</em></h2>
+        <p>Envoie-le à un entrepreneur qui passe ses soirées dans la paperasse. Quand il remplit sa demande par ce lien, elle t'est attribuée automatiquement.</p>
         <Partage url={lien.url} affiche={lien.affiche} slug={m.slug} />
       </div>
 
@@ -46,7 +46,7 @@ export default async function AccueilMembre() {
       <div className="deux">
         <div className="bloc">
           <h2>Dernières nouvelles</h2>
-          {nouvelles.length === 0 && <p className="vide">Rien pour l'instant. Dès qu'un entrepreneur remplit sa demande par votre lien, vous le verrez ici.</p>}
+          {nouvelles.length === 0 && <p className="vide">Rien pour l'instant. Dès qu'un entrepreneur remplit sa demande par ton lien, tu le verras ici.</p>}
           {nouvelles.map((n, i) => (
             <div className="ligne" key={i}><span className="n">→</span><div><b>{n.entreprise}</b><small>{n.quoi} · {dateCourte(n.le)}</small></div></div>
           ))}
@@ -55,7 +55,7 @@ export default async function AccueilMembre() {
         <div className="bloc">
           <h2>Qui référer?</h2>
           <p style={{ margin: "0 0 10px", fontSize: 14, color: "var(--sec)" }}>Un propriétaire d'entreprise de services qui fait ses soumissions et sa paperasse le soir : émondage, ramonage, paysagement, entretien extérieur…</p>
-          <p style={{ margin: 0, fontSize: 14, color: "var(--sec)" }}>Votre beau-frère, votre voisin, l'entrepreneur qui a fait votre terrain l'été passé.</p>
+          <p style={{ margin: 0, fontSize: 14, color: "var(--sec)" }}>Ton beau-frère, ton voisin, l'entrepreneur qui a fait ton terrain l'été passé.</p>
           <div style={{ marginTop: 14 }}><Link className="btn" href="/compte/qui-referer">Faire défiler les métiers</Link></div>
         </div>
       </div>

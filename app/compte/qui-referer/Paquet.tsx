@@ -66,10 +66,10 @@ export default function Paquet({ lien }: { lien: string }) {
   async function copier() {
     try {
       await navigator.clipboard.writeText(texte);
-      setCopie("Message copié. Collez-le dans Messenger ou ailleurs.");
+      setCopie("Message copié. Colle-le dans Messenger ou ailleurs.");
     } catch {
       zone.current?.select();
-      setCopie("Sélectionné : faites Ctrl+C pour copier.");
+      setCopie("Sélectionné : fais Ctrl+C pour copier.");
     }
   }
 
@@ -87,8 +87,8 @@ export default function Paquet({ lien }: { lien: string }) {
         <div className="qr-paquet" aria-live="polite">
           {fini ? (
             <div className="qr-fin">
-              <h2>Vous avez fait le tour !</h2>
-              <p>{connus.length ? `Vous connaissez quelqu'un dans ${connus.length} métier${connus.length > 1 ? "s" : ""}. Votre liste est à côté.` : "Personne pour l'instant. Revenez quand vous croiserez un entrepreneur."}</p>
+              <h2>Tu as fait le tour !</h2>
+              <p>{connus.length ? `Tu connais quelqu'un dans ${connus.length} métier${connus.length > 1 ? "s" : ""}. Ta liste est à côté.` : "Personne pour l'instant. Reviens quand tu croiseras un entrepreneur."}</p>
               <button type="button" className="btn" onClick={() => { setIndex(0); setHistorique([]); }}>Recommencer</button>
             </div>
           ) : (
@@ -133,8 +133,8 @@ export default function Paquet({ lien }: { lien: string }) {
       <aside className="qr-cote">
         {choisi && (
           <div className="qr-partage">
-            <h3>Envoyez-lui <em>votre lien</em></h3>
-            <p>Pour votre contact en {choisi.nom.toLowerCase()} : ajoutez son prénom, puis envoyez.</p>
+            <h3>Envoie-lui <em>ton lien</em></h3>
+            <p>Pour ton contact en {choisi.nom.toLowerCase()} : ajoute son prénom, puis envoie.</p>
             <label htmlFor="qr-message" className="qr-cache">Message à envoyer</label>
             <textarea id="qr-message" ref={zone} value={texte} onChange={(e) => setTexte(e.target.value)} rows={4} />
             <div className="qr-boutons">
@@ -146,9 +146,9 @@ export default function Paquet({ lien }: { lien: string }) {
           </div>
         )}
         <div className="bloc">
-          <h2>Vos « j'en connais un »</h2>
+          <h2>Tes « j'en connais un »</h2>
           {connus.length === 0 ? (
-            <p className="vide">Glissez une carte vers la droite pour l'ajouter ici. Vous pourrez y revenir pour envoyer votre lien plus tard.</p>
+            <p className="vide">Glisse une carte vers la droite pour l'ajouter ici. Tu pourras y revenir pour envoyer ton lien plus tard.</p>
           ) : (
             <ul className="qr-liste">
               {connus.map((m) => (

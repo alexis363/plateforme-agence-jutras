@@ -1,11 +1,6 @@
-import Regles from "../../Regles.tsx";
+import { redirect } from "next/navigation";
 
+// Les règles vivent maintenant dans « Comment ça fonctionne » (Alexis, 20 nov. 2026) : l'ancienne adresse y mène.
 export default function ReglesMembre() {
-  return (
-    <>
-      <h1 className="titre">Les <em>règles</em></h1>
-      <p className="sous">Simples, et les mêmes pour tout le monde.</p>
-      <Regles />
-    </>
-  );
+  redirect("/compte/comment-ca-fonctionne#regles");
 }
