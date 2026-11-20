@@ -56,6 +56,7 @@ export default async function AccueilMembre() {
           <h2>Qui référer?</h2>
           <p style={{ margin: "0 0 10px", fontSize: 14, color: "var(--sec)" }}>Un propriétaire d'entreprise de services qui fait ses soumissions et sa paperasse le soir : émondage, ramonage, paysagement, entretien extérieur…</p>
           <p style={{ margin: 0, fontSize: 14, color: "var(--sec)" }}>Votre beau-frère, votre voisin, l'entrepreneur qui a fait votre terrain l'été passé.</p>
+          <div style={{ marginTop: 14 }}><Link className="btn" href="/compte/qui-referer">Faire défiler les métiers</Link></div>
         </div>
       </div>
     </>

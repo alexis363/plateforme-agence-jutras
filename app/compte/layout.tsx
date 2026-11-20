@@ -12,6 +12,7 @@ export default async function EspaceMembre({ children }: { children: React.React
       entrees={[
         { href: "/compte", texte: "Accueil", icone: "accueil" },
         { href: "/compte/references", texte: "Mes références", icone: "lien" },
+        { href: "/compte/qui-referer", texte: "Qui référer ?", icone: "etoile" },
         { href: "/compte/regles", texte: "Les règles", icone: "doc" },
         { href: "/compte/services", texte: "Nos services", icone: "grille" },
         { href: "/compte/profil", texte: "Mon profil", icone: "personne" },

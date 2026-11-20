@@ -8,7 +8,7 @@ const CSP = [
   "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
-  "img-src 'self' data:",
+  "img-src 'self' data: https://images.unsplash.com", // photos des métiers de « Qui référer ? »
   "connect-src 'self'",
   "frame-ancestors 'none'",
   "object-src 'none'",
