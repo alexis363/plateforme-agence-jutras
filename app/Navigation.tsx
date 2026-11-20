@@ -19,6 +19,7 @@ const ICONES: Record<string, string> = {
   etoile: "m12 3 2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7Z",
   facture: "M6 3h12v18l-3-2-3 2-3-2-3 2ZM9 8h6M9 12h6",
   bulle: "M4 5h16v11H9l-5 4Z",
+  aide: "M3 12a9 9 0 1 0 18 0 9 9 0 1 0-18 0M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.7M12 17h.01",
   reglages: "M4 7h10M18 7h2M4 17h4M12 17h8M14 5v4M8 15v4",
 };
 

@@ -13,6 +13,7 @@ export default async function EspaceMembre({ children }: { children: React.React
       etiquette="Mon compte"
       entrees={[
         { href: "/compte", texte: "Accueil", icone: "accueil", groupe: "Ambassadeur Kairos", kairos: true },
+        { href: "/compte/comment-ca-fonctionne", texte: "Comment ça fonctionne", icone: "aide", groupe: "Ambassadeur Kairos", kairos: true },
         { href: "/compte/references", texte: "Mes références", icone: "lien", groupe: "Ambassadeur Kairos", kairos: true },
         { href: "/compte/qui-referer", texte: "Qui référer ?", icone: "etoile", groupe: "Ambassadeur Kairos", kairos: true },
         { href: "/compte/regles", texte: "Les règles", icone: "doc", groupe: "Ambassadeur Kairos", kairos: true },

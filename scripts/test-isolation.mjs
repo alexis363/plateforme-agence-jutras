@@ -75,6 +75,7 @@ const temoinA2 = (bonne.headers.get("set-cookie") ?? "").split(";")[0];
 verifier(bonne.ok && temoinA2.startsWith("aj_session="), "le bon mot de passe ouvre la session");
 verifier((await page("/compte", temoinA2)).status === 200, "la session ouverte par mot de passe donne accès au compte");
 verifier((await page("/compte/qui-referer", temoinA2)).status === 200, "la page « Qui référer ? » s'ouvre pour un membre connecté");
+verifier((await page("/compte/comment-ca-fonctionne", temoinA2)).status === 200, "la page « Comment ça fonctionne » s'ouvre pour un membre connecté");
 verifier(!(await (await page("/compte/profil", temoinA2)).text()).includes("scrypt$"), "le mot de passe haché n'apparaît jamais dans une page");
 const nonConfirme = await connecter(C.courriel, MDP);
 verifier(nonConfirme.status === 403 && !(nonConfirme.headers.get("set-cookie") ?? "").includes("aj_session"), "un compte non confirmé ne s'ouvre pas, même avec le bon mot de passe");
@@ -136,6 +137,7 @@ verifier(regAnonyme.status === 403, "sans session, les réglages ne changent pas
 // 5. Sans session, ou avec un témoin falsifié : renvoyé à la connexion.
 verifier(((await page("/compte")).headers.get("location") ?? "").includes("/connexion"), "sans session, /compte renvoie à la connexion");
 verifier(((await page("/compte/qui-referer")).headers.get("location") ?? "").includes("/connexion"), "sans session, « Qui référer ? » renvoie à la connexion");
+verifier(((await page("/compte/comment-ca-fonctionne")).headers.get("location") ?? "").includes("/connexion"), "sans session, « Comment ça fonctionne » renvoie à la connexion");
 const faux = sa.temoin.replace(/.$/, (c) => (c === "A" ? "B" : "A"));
 verifier(((await page("/compte", faux)).headers.get("location") ?? "").includes("/connexion"), "un témoin falsifié est refusé");
 verifier((await fetch(`${APP}/api/profil`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: "{}" })).status === 401, "sans session, le profil ne se modifie pas");

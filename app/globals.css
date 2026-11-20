@@ -464,3 +464,14 @@ button.refuge-nom:focus-visible{outline:2px solid var(--k-olive);outline-offset:
 .etape-info .ei-fermer{position:absolute;top:6px;right:8px;border:0;background:none;font-size:20px;line-height:1;color:var(--sec);cursor:pointer;padding:4px}
 @media (max-width:640px){.refuge-nom{display:inline-flex}.refuge-nom .rn-texte{display:none}.refuge-nom{padding:3px 9px}.sommet .refuge-nom .rn-texte{display:inline}.etape-info{width:min(240px,80%)}}
 @media (prefers-reduced-motion:reduce){.etape-info{animation:none}}
+/* « Comment ça fonctionne » : trois étapes aux couleurs de Kairos (Alexis, 20 nov. 2026). */
+.cf-etapes{list-style:none;margin:0 0 22px;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:960px}
+.cf-etapes li{position:relative;overflow:hidden;padding:24px 22px 26px;border-radius:var(--r-grand);background:var(--k-fondu);color:var(--k-texte)}
+.cf-etapes li::after{content:"";position:absolute;width:220px;height:220px;right:-90px;top:-110px;border-radius:50%;background:radial-gradient(circle,rgba(163,176,122,.22),transparent 70%);pointer-events:none}
+.cf-num{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;border:1.5px solid var(--k-sauge);color:var(--k-sauge);font-family:var(--serif);font-size:20px;margin-bottom:16px}
+.cf-etapes h2{margin:0 0 8px;font-family:var(--serif);font-weight:400;font-size:21px;line-height:1.2;color:var(--k-texte)}
+.cf-etapes p{margin:0;font-size:14.5px;line-height:1.55;color:rgba(241,243,234,.8)}
+.cf-bas{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.cf-regles{font-size:14px;color:var(--k-olive);text-decoration:none;font-weight:500}
+.cf-regles:hover{text-decoration:underline}
+@media (max-width:860px){.cf-etapes{grid-template-columns:1fr}}
