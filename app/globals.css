@@ -74,18 +74,19 @@ main{padding:34px 42px 70px;max-width:1140px;width:100%;animation:entre .45s var
 .note{font-size:13px;color:var(--sec)}
 
 /* Lien */
-.lien-carte{padding:26px 28px;color:var(--bg);background:linear-gradient(130deg,#1A1612 0%,#2C2824 45%,#6B4E34 85%,#9E7248 100%);position:relative;overflow:hidden;margin-bottom:22px}
-.lien-carte::after{content:"";position:absolute;width:320px;height:320px;right:-110px;top:-140px;border-radius:50%;background:radial-gradient(circle,rgba(196,149,106,.25),transparent 70%);pointer-events:none}
+/* Le lien de référence est un lien pour Kairos : aux couleurs de Kairos (Alexis, 19 nov. 2026). Seul le bouton Copier reste terracotta. */
+.lien-carte{padding:26px 28px;color:#F1F3EA;background:linear-gradient(135deg,#1B1E14 0%,#242919 45%,#3B4626 80%,#5B6B3A 100%);position:relative;overflow:hidden;margin-bottom:22px}
+.lien-carte::after{content:"";position:absolute;width:320px;height:320px;right:-110px;top:-140px;border-radius:50%;background:radial-gradient(circle,rgba(163,176,122,.28),transparent 70%);pointer-events:none}
 .lien-carte h2{font-size:24px;margin-bottom:6px}
-.lien-carte h2 em{color:var(--terra)}
-.lien-carte p{margin:0 0 16px;color:rgba(245,240,235,.75);font-size:14px;max-width:560px}
+.lien-carte h2 em{color:#A3B07A}
+.lien-carte p{margin:0 0 16px;color:rgba(241,243,234,.78);font-size:14px;max-width:560px}
 .url{display:flex;max-width:560px;position:relative;z-index:1}
-.url code{flex:1;min-width:0;background:rgba(245,240,235,.08);border:1px solid rgba(196,149,106,.5);padding:12px 14px;font-family:var(--sans);font-size:15px;color:var(--bg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.url code b{color:var(--terra);font-weight:500}
+.url code{flex:1;min-width:0;background:rgba(241,243,234,.08);border:1px solid rgba(163,176,122,.55);padding:12px 14px;font-family:var(--sans);font-size:15px;color:var(--bg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.url code b{color:#A3B07A;font-weight:500}
 .partage{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;position:relative;z-index:1}
-.partage a,.partage button{display:inline-flex;align-items:center;gap:8px;background:none;border:1px solid rgba(245,240,235,.3);color:var(--bg);padding:9px 14px;font-size:13px;cursor:pointer;text-decoration:none;transition:border-color .25s}
-.partage a:hover,.partage button:hover{border-color:var(--terra)}
-.copie{position:relative;z-index:1;font-size:13px;color:var(--terra);margin-top:10px;min-height:20px}
+.partage a,.partage button{display:inline-flex;align-items:center;gap:8px;background:none;border:1px solid rgba(241,243,234,.3);color:var(--bg);padding:9px 14px;font-size:13px;cursor:pointer;text-decoration:none;transition:border-color .25s}
+.partage a:hover,.partage button:hover{border-color:#A3B07A}
+.copie{position:relative;z-index:1;font-size:13px;color:#A3B07A;margin-top:10px;min-height:20px}
 
 /* Nouvelles et règles */
 .ligne{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--bord)}
@@ -367,15 +368,18 @@ background:linear-gradient(135deg,#1B1E14 0%,#242919 45%,#3B4626 80%,#5B6B3A 100
 .qr-libelles span:first-child{width:48px}
 .qr-libelles span:last-child{width:84px}
 .qr-cote{display:flex;flex-direction:column;gap:16px}
-.qr-partage{border-radius:var(--r-grand);padding:22px;color:var(--bg);background:linear-gradient(130deg,#1A1612 0%,#2C2824 45%,#6B4E34 85%,#9E7248 100%);position:relative;overflow:hidden}
-.qr-partage::after{content:"";position:absolute;width:260px;height:260px;right:-100px;top:-120px;border-radius:50%;background:radial-gradient(circle,rgba(196,149,106,.28),transparent 70%);pointer-events:none}
+/* Panneau du lien de référence Kairos : aux couleurs de Kairos, bouton Copier terracotta (19 nov. 2026) */
+.qr-partage{border-radius:var(--r-grand);padding:22px;color:#F1F3EA;background:linear-gradient(135deg,#1B1E14 0%,#242919 45%,#3B4626 80%,#5B6B3A 100%);position:relative;overflow:hidden}
+.qr-partage::after{content:"";position:absolute;width:260px;height:260px;right:-100px;top:-120px;border-radius:50%;background:radial-gradient(circle,rgba(163,176,122,.28),transparent 70%);pointer-events:none}
 .qr-partage h3{font-size:21px;margin-bottom:6px;position:relative;z-index:1}
-.qr-partage h3 em{color:var(--terra)}
-.qr-partage p{margin:0 0 12px;font-size:13.5px;color:rgba(245,240,235,.75);position:relative;z-index:1}
-.qr-partage textarea{width:100%;resize:none;overflow:hidden;border-radius:var(--r);border:1px solid rgba(196,149,106,.5);background:rgba(245,240,235,.08);color:var(--bg);font:inherit;font-size:14px;line-height:1.55;padding:12px 14px;position:relative;z-index:1;display:block}
+.qr-partage h3 em{color:#A3B07A}
+.qr-partage p{margin:0 0 12px;font-size:13.5px;color:rgba(241,243,234,.78);position:relative;z-index:1}
+.qr-partage textarea{width:100%;resize:none;overflow:hidden;border-radius:var(--r);border:1px solid rgba(163,176,122,.55);background:rgba(241,243,234,.08);color:#F1F3EA;font:inherit;font-size:14px;line-height:1.55;padding:12px 14px;position:relative;z-index:1;display:block}
 .qr-boutons{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;position:relative;z-index:1}
-.qr-boutons a,.qr-boutons button{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:9px 16px;font-size:13px;cursor:pointer;text-decoration:none;border:1px solid rgba(245,240,235,.3);background:none;color:var(--bg)}
+.qr-boutons a,.qr-boutons button{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:9px 16px;font-size:13px;cursor:pointer;text-decoration:none;border:1px solid rgba(241,243,234,.3);background:none;color:#F1F3EA}
+.qr-boutons a:hover,.qr-boutons button:hover{border-color:#A3B07A}
 .qr-boutons .qr-principal{background:var(--terra);border-color:var(--terra);color:var(--deep);font-weight:500}
+.qr-boutons .qr-principal:hover{border-color:var(--terra);background:#D3A87F}
 .qr-liste{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
 .qr-liste li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r);background:var(--terra-lt);font-size:14px}
 .qr-liste button{border:0;background:var(--ink);color:var(--bg);font-size:12px;padding:6px 12px;border-radius:999px;cursor:pointer}

@@ -3,8 +3,8 @@ export default function Services() {
     <>
       <h1 className="titre">Nos <em>services</em></h1>
       <p className="sous">Vous êtes vous-même entrepreneur? Votre espace client s'ouvre dès votre premier service.</p>
-      {/* Aux couleurs de Kairos (jamais celles de l'agence), cliquable vers la vitrine Kairos du site (Alexis, 19 nov. 2026). */}
-      <a className="carte-kairos" href="https://www.agencejutras.com/#vitrine" target="_blank" rel="noopener">
+      {/* Aux couleurs de Kairos (jamais celles de l'agence), cliquable vers la section « Projet livré » (Kairos chez Émondage JMF) du site (Alexis, 19 nov. 2026). */}
+      <a className="carte-kairos" href="https://www.agencejutras.com/#projet" target="_blank" rel="noopener">
         <span className="ck-statut">En service</span>
         <span className="ck-logo" aria-label="Kairos Soumission">
           <small>AGENCE JUTRAS</small>
