@@ -90,7 +90,7 @@ la connexion ; un lien non confirmé n'existe pas ; se référer soi-même ne co
 
 ## Les règles du programme
 
-Dans `lib/regles.ts` : 100 $, Kairos seulement, 6 mois, les 6 étapes, les places limitées par mois. Elles viennent de
+Affichées avec le fonctionnement en 3 étapes dans « Comment ça fonctionne » (`/compte/comment-ca-fonctionne` ; `/compte/regles` y renvoie, 20 nov. 2026). Dans `lib/regles.ts` : 100 $, Kairos seulement, 6 mois, les 6 étapes, les places limitées par mois. Elles viennent de
 `2 - Ventes/Programme de référence.md` dans le coffre : changer l'un, c'est changer l'autre.
 
 ## Architecture
@@ -121,7 +121,7 @@ Le courriel est confirmé une fois, par un lien valide 48 h ; « Mot de passe ou
 
 ## Règles du projet
 
-- Interface et code en français québécois, vouvoiement.
+- Interface et code en français québécois. On tutoie les ambassadeurs dans leur espace ; le reste vouvoie (20 nov. 2026).
 - **Aucun prix de l'Agence Jutras, aucun gain chiffré, aucun témoignage** sur les pages publiques. La récompense de 100 $ n'est pas un prix.
 - Données de démonstration **fictives** (`scripts/demo-local.mjs`). Aucune donnée réelle dans `.donnees/` ni dans Git.
 - Clés : seulement dans `.env.local`. Commit et push seulement quand Alexis le demande.
