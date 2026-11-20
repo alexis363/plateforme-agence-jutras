@@ -1,11 +1,11 @@
 import Link from "next/link";
 import Partage from "./Partage.tsx";
-import Entonnoir from "./Entonnoir.tsx";
+import Montagne from "./Montagne.tsx";
 import { exigerMembre } from "@/lib/session.ts";
 import { referencesDuMembre, visitesDuMembre } from "@/lib/depot.ts";
 import { lienReference } from "@/lib/courriel.ts";
 import { chiffresMembre } from "@/lib/stats.ts";
-import { ETAPES, RECOMPENSE, dateCourte } from "@/lib/regles.ts";
+import { RECOMPENSE, dateCourte } from "@/lib/regles.ts";
 
 export default async function AccueilMembre() {
   const m = await exigerMembre();
@@ -17,6 +17,13 @@ export default async function AccueilMembre() {
     .flatMap((r) => r.historique.map((h) => ({ ...h, entreprise: r.entreprise })))
     .sort((a, b) => b.le.localeCompare(a.le))
     .slice(0, 4);
+  // La montagne : une référence active = un grimpeur, avec sa dernière nouvelle (jamais les notes privées).
+  const grimpeurs = refs
+    .filter((r) => !r.fermee)
+    .map((r) => {
+      const derniere = [...r.historique].sort((a, b) => b.le.localeCompare(a.le))[0];
+      return { id: r.id, prenom: r.contact.trim().split(/\s+/)[0] || "Votre référence", etape: r.etape, nouvelle: derniere ? `${derniere.quoi} · ${dateCourte(derniere.le)}` : "" };
+    });
 
   return (
     <>
@@ -34,15 +41,7 @@ export default async function AccueilMembre() {
         <Partage url={lien.url} affiche={lien.affiche} slug={m.slug} />
       </div>
 
-      <Entonnoir bandes={[
-        { n: c.visites, texte: "Visites du lien" },
-        { n: c.demandes, texte: ETAPES[0] },
-        { n: c.rencontres, texte: ETAPES[1] },
-        { n: c.installations, texte: ETAPES[2] },
-        { n: c.enEssai, texte: ETAPES[3] },
-        { n: c.payants, texte: ETAPES[4], note: `${RECOMPENSE} $ chacun` },
-        { n: c.verses, texte: ETAPES[5] },
-      ]} />
+      <Montagne visites={c.visites} grimpeurs={grimpeurs} />
 
       <div className="deux">
         <div className="bloc">
