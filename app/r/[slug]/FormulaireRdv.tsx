@@ -48,8 +48,8 @@ export default function FormulaireRdv({ slug, qui }: { slug: string; qui: string
       <div className="formrdv"><div className="merci">
         <div className="rond">✓</div>
         <h3>{fait.moment ? "C'est réservé" : "C'est noté"}{fait.prenom ? `, ${fait.prenom}` : ""}.</h3>
-        <p style={{ color: "var(--sec)" }}>{fait.moment ? `Je vous appelle ${fait.moment}.` : "Je vous appelle sous peu pour fixer le moment."}</p>
-        <p style={{ color: "var(--sec)", fontSize: 14 }}>Si vous avez laissé votre courriel, l'invitation est dans votre boîte. Un empêchement? Écrivez-moi au 581-349-1258.</p>
+        <p style={{ color: "var(--sec)" }}>{fait.moment ? `On se parle ${fait.moment} sur Google Meet. Le lien est dans l'invitation envoyée à votre courriel.` : "Je vous contacte sous peu pour fixer le moment."}</p>
+        <p style={{ color: "var(--sec)", fontSize: 14 }}>Un empêchement? Écrivez-moi au 581-349-1258.</p>
       </div></div>
     );
 
@@ -58,11 +58,11 @@ export default function FormulaireRdv({ slug, qui }: { slug: string; qui: string
     <form className="formrdv" onSubmit={envoyer}>
       {qui && <span className="reco-tag">✓ Recommandé par {qui}</span>}
       <h3>Réservez vos 15 minutes</h3>
-      <p className="s">Choisissez votre plage : je vous appelle à l'heure choisie.</p>
+      <p className="s">Choisissez votre plage : on se parle sur Google Meet, le lien vous arrive par courriel.</p>
 
       {jours === null && <p className="s">Chargement de mes disponibilités…</p>}
       {jours?.length === 0 && (
-        <p className="erreur" style={{ marginBottom: 16 }}>Aucune plage libre cette semaine ni la suivante. Laissez vos coordonnées : je vous appelle pour en trouver une.</p>
+        <p className="erreur" style={{ marginBottom: 16 }}>Aucune plage libre cette semaine ni la suivante. Laissez vos coordonnées : je vous contacte pour en trouver une.</p>
       )}
       {!!jours?.length && (
         <>
@@ -89,12 +89,12 @@ export default function FormulaireRdv({ slug, qui }: { slug: string; qui: string
         <label className="champ"><span>Nom</span><input name="nom" required maxLength={40} autoComplete="family-name" placeholder="Roy" /></label>
         <label className="champ"><span>Nom de votre entreprise</span><input name="entreprise" required maxLength={80} autoComplete="organization" placeholder="Paysagement Roy" /></label>
         <label className="champ"><span>Cellulaire</span><input name="cellulaire" required inputMode="tel" placeholder="418-555-0123" /></label>
-        <label className="champ large"><span>Courriel (pour recevoir l'invitation)</span><input name="courriel" type="email" maxLength={120} /></label>
+        <label className="champ large"><span>Courriel (pour recevoir le lien Google Meet)</span><input name="courriel" type="email" required maxLength={120} /></label>
         <label className="champ large"><span>Votre plus gros casse-tête administratif</span><textarea name="casseTete" maxLength={600} placeholder="Les soumissions le soir, les demandes éparpillées…" /></label>
       </div>
       <button className="btn" disabled={occupe || jours === null}>{occupe ? "Réservation…" : <>Réserver mes 15 minutes <span aria-hidden="true">→</span></>}</button>
       <p className="erreur" role="alert">{erreur}</p>
-      <p className="legal">Vos renseignements servent seulement à préparer notre appel.{qui ? ` Votre demande est attribuée à ${qui}, qui vous a recommandé.` : ""} <a href="https://www.agencejutras.com/politique-de-confidentialite.html">Politique de confidentialité</a>.</p>
+      <p className="legal">Vos renseignements servent seulement à préparer notre rencontre.{qui ? ` Votre demande est attribuée à ${qui}, qui vous a recommandé.` : ""} <a href="https://www.agencejutras.com/politique-de-confidentialite.html">Politique de confidentialité</a>.</p>
     </form>
   );
 }

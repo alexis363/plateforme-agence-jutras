@@ -188,7 +188,7 @@ export async function plageEncoreLibre(debutIso: string): Promise<boolean> {
 // ambassadeur : le membre qui a référé, ou null pour un rendez-vous pris sur le site web.
 export type Rdv = { debut: string; entreprise: string; contact: string; metier: string; cellulaire: string; courriel: string; casseTete: string; ambassadeur: string | null };
 
-// Crée le rendez-vous dans l'agenda d'Alexis ; Google envoie l'invitation à l'entrepreneur s'il a laissé un courriel.
+// Crée le rendez-vous dans l'agenda d'Alexis, avec un lien Google Meet ; Google envoie l'invitation à l'entrepreneur.
 // Retourne l'identifiant de l'événement (null en agenda simulé).
 export async function creerRendezVous(r: Rdv): Promise<string | null> {
   if (!googleConfigure()) return null;
@@ -201,21 +201,28 @@ export async function creerRendezVous(r: Rdv): Promise<string | null> {
     r.casseTete ? `Son plus gros casse-tête : ${r.casseTete}` : "",
     "",
     r.ambassadeur
-      ? "Alexis vous appelle au numéro ci-dessus. Pris par le programme ambassadeur Kairos de l'Agence Jutras."
-      : "Alexis vous appelle au numéro ci-dessus.",
+      ? "On se parle sur Google Meet : le lien est dans cette invitation. Pris par le programme ambassadeur Kairos de l'Agence Jutras."
+      : "On se parle sur Google Meet : le lien est dans cette invitation.",
   ].filter((l, i, t) => l || i === t.length - 2).join("\n");
-  const rep = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${calendrier()}/events?sendUpdates=all`, {
+  const evenement = {
+    summary: r.ambassadeur ? `Google Meet ${duree} min · Kairos · ${r.entreprise}` : `Google Meet ${duree} min · Agence Jutras · ${r.entreprise}`,
+    description,
+    start: { dateTime: new Date(debut).toISOString(), timeZone: FUSEAU },
+    end: { dateTime: new Date(debut + duree * 60e3).toISOString(), timeZone: FUSEAU },
+    attendees: r.courriel ? [{ email: r.courriel, displayName: r.contact }] : [],
+    reminders: { useDefault: true },
+  };
+  const creer = async (avecMeet: boolean) => fetch(
+    `https://www.googleapis.com/calendar/v3/calendars/${calendrier()}/events?sendUpdates=all${avecMeet ? "&conferenceDataVersion=1" : ""}`, {
     method: "POST",
     headers: { Authorization: `Bearer ${await jetonGoogle()}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      summary: r.ambassadeur ? `Appel ${duree} min · Kairos · ${r.entreprise}` : `Appel ${duree} min · Agence Jutras · ${r.entreprise}`,
-      description,
-      start: { dateTime: new Date(debut).toISOString(), timeZone: FUSEAU },
-      end: { dateTime: new Date(debut + duree * 60e3).toISOString(), timeZone: FUSEAU },
-      attendees: r.courriel ? [{ email: r.courriel, displayName: r.contact }] : [],
-      reminders: { useDefault: true },
-    }),
+    body: JSON.stringify(avecMeet
+      ? { ...evenement, conferenceData: { createRequest: { requestId: crypto.randomUUID(), conferenceSolutionKey: { type: "hangoutsMeet" } } } }
+      : evenement),
   });
+  // Si Google refuse le lien Meet, le rendez-vous est quand même créé (Alexis ajoute le lien à la main).
+  let rep = await creer(true);
+  if (!rep.ok) rep = await creer(false);
   if (!rep.ok) throw new Error(`Google n'a pas créé le rendez-vous (${rep.status})`);
   return (await rep.json()).id ?? null;
 }

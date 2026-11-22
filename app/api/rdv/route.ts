@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     evenementId = await creerRendezVous({ ...coordonnees, debut, ambassadeur: null });
   } catch {
     await creerRdvSite({ ...coordonnees, moment: `Souhaitait ${moment} (non réservé : l'agenda a refusé)`, rendezVous: null, evenementId: null });
-    return reponse(req, { erreur: "Votre demande est reçue, mais la plage n'a pas pu être réservée. Je vous appelle pour fixer le moment." }, 502);
+    return reponse(req, { erreur: "Votre demande est reçue, mais la plage n'a pas pu être réservée. Je vous contacte pour fixer le moment." }, 502);
   }
   await creerRdvSite({ ...coordonnees, moment, rendezVous: debut, evenementId });
   return reponse(req, { ok: true, moment });

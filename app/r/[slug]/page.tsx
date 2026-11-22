@@ -77,8 +77,8 @@ export default async function PageReference({ params }: { params: Promise<{ slug
         <div className="qui">
           <img src="/img/alexis-rond.webp" alt="Alexis Jutras" width={640} height={640} />
           <h2>Choisissez <em>votre moment.</em></h2>
-          <p>C'est moi, Alexis, qui vous appelle. 15 minutes pour voir si Kairos peut vous redonner vos soirées. Si ce n'est pas pour vous, je vous le dis.</p>
-          <ul><li>15 minutes, au téléphone ou en vidéo</li><li>Aucun engagement</li><li>On parle de votre volume, puis du prix</li></ul>
+          <p>C'est moi, Alexis, que vous rencontrez sur Google Meet. 15 minutes pour voir si Kairos peut vous redonner vos soirées. Si ce n'est pas pour vous, je vous le dis.</p>
+          <ul><li>15 minutes sur Google Meet</li><li>Aucun engagement</li><li>On parle de votre volume, puis du prix</li></ul>
         </div>
         <FormulaireRdv slug={slug} qui={membre.prenom} />
       </div></section>

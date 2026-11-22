@@ -10,13 +10,13 @@ const Schema = z.object({
   entreprise: z.string().trim().min(2).max(80),
   metier: z.string().trim().max(60).optional(),
   cellulaire: z.string().trim().regex(/^[\d\s().+-]{10,20}$/),
-  courriel: z.union([z.literal(""), z.email().max(120)]),
+  courriel: z.email().max(120), // obligatoire : le lien Google Meet arrive par l'invitation
   casseTete: z.string().trim().max(600),
   debut: z.iso.datetime().optional(), // absent seulement quand aucune plage n'est libre
   site: z.string().max(0).optional(), // champ piège invisible : un robot le remplit, une personne non
 });
 
-export const MESSAGE_INVALIDE = "Vérifiez vos coordonnées et choisissez une plage : le prénom, le nom, l'entreprise et le cellulaire sont requis.";
+export const MESSAGE_INVALIDE = "Vérifiez vos coordonnées et choisissez une plage : le prénom, le nom, l'entreprise, le cellulaire et le courriel sont requis.";
 
 export type Coordonnees = { contact: string; entreprise: string; metier: string; cellulaire: string; courriel: string; casseTete: string };
 

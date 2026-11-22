@@ -28,7 +28,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
   } catch {
     // L'agenda a refusé : la demande est gardée quand même (attribution), et Alexis rappelle pour fixer le moment.
     await creerReference(pub.id, { ...coordonnees, moment: `Souhaitait ${moment} (non réservé : l'agenda a refusé)`, rendezVous: null, evenementId: null });
-    return Response.json({ erreur: "Votre demande est reçue, mais la plage n'a pas pu être réservée. Je vous appelle pour fixer le moment." }, { status: 502 });
+    return Response.json({ erreur: "Votre demande est reçue, mais la plage n'a pas pu être réservée. Je vous contacte pour fixer le moment." }, { status: 502 });
   }
   await creerReference(pub.id, { ...coordonnees, moment, rendezVous: debut, evenementId });
   return Response.json({ ok: true, moment });
