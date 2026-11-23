@@ -115,7 +115,7 @@ Le courriel est confirmé une fois, par un lien valide 48 h ; « Mot de passe ou
    Il faudra copier `SUPABASE_URL` et `SUPABASE_SECRET_KEY` dans Vercel.
 2. **SendGrid** (choix du 17 nov. 2026, domaine déjà authentifié) : mettre `SENDGRID_API_KEY` (permission « Mail Send ») et `COURRIEL_EXPEDITEUR` dans Vercel.
 3. **Variables** : `SESSION_SECRET` (32 caractères ou plus), `ADMIN_COURRIELS`, `APP_URL`, `SITE_URL`.
-4. **Les adresses** : `compte.agencejutras.com` pour l'application ; une redirection `agencejutras.com/r/*` vers l'application.
+4. **Les adresses** : ~~`compte.agencejutras.com`~~ branchée le 22 nov. 2026, `APP_URL` à jour dans Vercel le même jour. Reste une redirection `agencejutras.com/r/*` vers l'application.
 5. **La Loi 25** : la politique de confidentialité du site doit parler du programme (noms, cellulaires, courriels Interac, témoin `aj_ref` de 90 jours).
 6. Changer de mot de passe ne ferme pas encore les autres sessions ouvertes.
 

@@ -43,6 +43,14 @@ export default async function AccueilMembre() {
 
       <Montagne visites={c.visites} grimpeurs={grimpeurs} />
 
+      {/* Les chiffres en un coup d'œil, sous la montagne (Alexis, 22 nov. 2026). Chaque nombre inclut ceux qui sont allés plus loin. */}
+      <div className="chiffres chiffres-montagne">
+        <div className="chiffre"><b>{c.visites}</b><span>{c.visites > 1 ? "visites" : "visite"} du lien</span></div>
+        <div className="chiffre"><b>{c.demandes}</b><span>{c.demandes > 1 ? "demandes" : "demande"} de rendez-vous</span></div>
+        <div className="chiffre"><b>{c.enEssai}</b><span>{c.enEssai > 1 ? "essais gratuits" : "essai gratuit"}</span></div>
+        <div className="chiffre argent"><b>{c.payants}</b><span>{c.payants > 1 ? "clients" : "client"} · {RECOMPENSE} $ chacun</span></div>
+      </div>
+
       <div className="deux">
         <div className="bloc">
           <h2>Dernières nouvelles</h2>

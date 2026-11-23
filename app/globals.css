@@ -476,3 +476,5 @@ button.refuge-nom:focus-visible{outline:2px solid var(--k-olive);outline-offset:
 .cf-regles:hover{text-decoration:underline}
 @media (max-width:860px){.cf-etapes{grid-template-columns:1fr}}
 .cf-titre-regles{margin-top:44px;scroll-margin-top:80px}
+
+.chiffres-montagne{margin-top:16px}
