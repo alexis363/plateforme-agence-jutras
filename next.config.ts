@@ -21,7 +21,8 @@ const entetes = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "no-referrer" },
-  { key: "Permissions-Policy", value: "microphone=(), camera=(), geolocation=(), payment=(), usb=()" },
+  // Le micro est permis à la plateforme elle-même : l'essai de la dictée sur la page d'un lien (22 nov. 2026).
+  { key: "Permissions-Policy", value: "microphone=(self), camera=(), geolocation=(), payment=(), usb=()" },
 ];
 
 const nextConfig: NextConfig = {

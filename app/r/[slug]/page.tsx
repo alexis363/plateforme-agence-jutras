@@ -3,6 +3,8 @@ import "../landing.css";
 import Marque from "../../Marque.tsx";
 import Visite from "./Visite.tsx";
 import FormulaireRdv from "./FormulaireRdv.tsx";
+import EssaiDictee from "./EssaiDictee.tsx";
+import Calculatrice from "./Calculatrice.tsx";
 import { membrePublic } from "@/lib/depot.ts";
 import { placesDuMois } from "@/lib/regles.ts";
 
@@ -75,6 +77,18 @@ export default async function PageReference({ params }: { params: Promise<{ slug
             <p>Après la visite, décrivez les travaux et vos prix à voix haute. Kairos prépare les lignes du devis et calcule les taxes. Vous relisez, vous envoyez.</p></div>
           <div className="p-img"><img src="/img/devis.webp" alt="Un devis préparé par Kairos" width={2400} height={1500} loading="lazy" /></div>
         </div>
+      </div></section>
+
+      {/* L'essai de la dictée et la calculatrice, repris du site (Alexis, 22 nov. 2026). Tout se fait dans le navigateur. */}
+      <section className="s sombre essai" id="essai"><div className="wrap">
+        <div className="titre-s"><span className="etiq">Essai gratuit, ici même</span><h2>Dictez un devis. <em>Regardez-le s'écrire.</em></h2><p>Parlez comme sur un chantier : le travail, puis le prix. Rien n'est envoyé ni gardé.</p></div>
+        <EssaiDictee />
+      </div></section>
+
+      <section className="s calc" id="calculatrice"><div className="wrap">
+        <div className="titre-s"><span className="etiq">Vos chiffres</span><h2>Combien Kairos <em>vous permet de récupérer.</em></h2><p>Ajustez chaque curseur avec vos vrais chiffres. Le calcul se met à jour tout seul.</p></div>
+        <Calculatrice />
+        <p style={{ textAlign: "center", marginTop: 40 }}><a className="btn" href="#rdv">Réserver mes 15 minutes <span aria-hidden="true">→</span></a></p>
       </div></section>
 
       <section className="s sombre"><div className="wrap">
