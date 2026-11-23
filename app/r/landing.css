@@ -21,6 +21,7 @@
 .landing .logo-k small{font-size:10px;letter-spacing:.42em;color:var(--olive-pale)}
 .landing .hero h1{font-size:clamp(38px,5vw,60px)}
 .landing .hero h1 em{color:var(--olive-pale)}
+.landing .hero h1 .h1-qui{display:block;font-size:.62em;line-height:1.2;margin-bottom:.25em;color:var(--olive-pale)}
 .landing .lede{font-size:18px;color:rgba(245,240,235,.78);margin:22px 0 30px;max-width:500px}
 .landing .places{display:inline-flex;align-items:center;gap:10px;margin-top:22px;font-size:14px;color:rgba(245,240,235,.85)}
 .landing .places::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--olive-pale);animation:pouls 2s infinite}

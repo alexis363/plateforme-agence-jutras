@@ -27,7 +27,11 @@ export default async function PageReference({ params }: { params: Promise<{ slug
       <header className="hero"><div className="wrap">
         <div>
           <div className="logo-k"><b>KAIROS</b><i /><small>SOUMISSION</small></div>
-          <h1>Vos soumissions, <em>réglées avant le souper.</em></h1>
+          {/* Le prénom de l'ambassadeur dans le titre (Alexis, 22 nov. 2026), s'il a accepté de l'afficher. */}
+          <h1>
+            {membre.prenom && <span className="h1-qui">{membre.prenom} vous recommande Kairos.</span>}
+            Vos soumissions, <em>réglées avant le souper.</em>
+          </h1>
           <p className="lede">Toutes vos demandes au même endroit, une tournée de visites qui se planifie seule, et des devis que vous dictez à voix haute dans le camion.</p>
           <a className="btn" href="#rdv">Réserver mes 15 minutes <span aria-hidden="true">→</span></a>
           {places && <div><span className="places">{places.nombre} nouvelles places seulement en {places.mois}</span></div>}
