@@ -1,4 +1,3 @@
-import Link from "next/link";
 import Marque from "../Marque.tsx";
 import Formulaire from "./Formulaire.tsx";
 import { boiteLocale } from "@/lib/depot.ts";
@@ -16,7 +15,6 @@ export default async function Connexion({ searchParams }: { searchParams: Promis
         {supprime === "1" && <p className="ok" style={{ marginBottom: 14 }}>✓ Votre compte est supprimé. Merci d'avoir fait partie du programme.</p>}
         {lien === "expire" && <p className="erreur" style={{ marginBottom: 14 }}>Ce lien est expiré ou déjà utilisé. Connectez-vous : si votre courriel n'est pas encore confirmé, on vous renverra le lien.</p>}
         <Formulaire local={boiteLocale()} />
-        <p className="bas">Pas encore membre? <Link href="/inscription">Obtenir mon lien</Link></p>
       </div>
     </div>
   );

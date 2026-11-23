@@ -142,6 +142,8 @@ background:linear-gradient(135deg,#1A1612 0%,#2C2824 40%,#6B4E34 75%,#9E7248 100
 .boite h1{font-size:28px;margin-bottom:6px}
 .boite .sous{margin:0 0 22px}
 .boite .btn{width:100%;padding:15px;margin-top:6px}
+.boite .pas-de-compte{display:flex;justify-content:center;width:100%;padding:14px;margin:10px 0 14px;text-decoration:none;color:var(--ink)}
+.boite form .erreur:empty{min-height:0;margin:0}
 .boite .bas{margin-top:18px;font-size:14px;color:var(--sec)}
 .boite .bas a{color:var(--terra-dk);border-bottom:1px solid var(--terra);text-decoration:none}
 .boite .local{margin-top:16px;padding:12px 14px;background:var(--terra-lt);font-size:13px}

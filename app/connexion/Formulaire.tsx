@@ -28,6 +28,7 @@ export default function Formulaire({ local }: { local: boolean }) {
       <label className="champ"><span>Mot de passe</span><input name="motDePasse" type="password" required autoComplete="current-password" /></label>
       <button className="btn" disabled={occupe}>{occupe ? "Connexion…" : "Se connecter"}</button>
       <p className="erreur" role="alert">{erreur}</p>
+      <Link className="btn-2 pas-de-compte" href="/inscription">Pas encore de compte?</Link>
       <p className="bas" style={{ marginTop: 4 }}><Link href="/mot-de-passe-oublie">Mot de passe oublié?</Link></p>
       {local && erreur.includes("Confirmez") && <p className="local">Sur l'ordinateur, les courriels arrivent dans la <a href="/dev/courriels">boîte locale</a>.</p>}
     </form>
