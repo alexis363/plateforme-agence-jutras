@@ -21,7 +21,13 @@
 .landing .logo-k small{font-size:10px;letter-spacing:.42em;color:var(--olive-pale)}
 .landing .hero h1{font-size:clamp(38px,5vw,60px)}
 .landing .hero h1 em{color:var(--olive-pale)}
-.landing .hero h1 .h1-qui{display:block;font-size:.62em;line-height:1.2;margin-bottom:.25em;color:var(--olive-pale)}
+.landing .titre-reco{display:flex;flex-direction:column;align-items:flex-start;gap:14px}
+.landing .titre-reco .reco-txt{font-size:clamp(30px,3.6vw,44px);line-height:1.1}
+.landing .logo-k-titre{margin-bottom:0}
+.landing .logo-k-titre b{font-size:clamp(56px,8vw,96px)}
+.landing .logo-k-titre small{font-size:12px}
+.landing .sous-titre{font-family:var(--serif,"Fraunces",serif);font-size:clamp(24px,2.8vw,34px);line-height:1.2;margin:26px 0 0}
+.landing .sous-titre em{color:var(--olive-pale)}
 .landing .lede{font-size:18px;color:rgba(245,240,235,.78);margin:22px 0 30px;max-width:500px}
 .landing .places{display:inline-flex;align-items:center;gap:10px;margin-top:22px;font-size:14px;color:rgba(245,240,235,.85)}
 .landing .places::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--olive-pale);animation:pouls 2s infinite}
