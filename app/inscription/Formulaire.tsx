@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
 
-export default function Formulaire({ local }: { local: boolean }) {
-  const [etat, setEtat] = useState<"saisie" | "envoi" | "envoye">("saisie");
+export default function Formulaire(_: { local?: boolean }) {
+  const [etat, setEtat] = useState<"saisie" | "envoi">("saisie");
   const [erreur, setErreur] = useState("");
 
   async function envoyer(e: React.FormEvent<HTMLFormElement>) {
@@ -21,19 +21,12 @@ export default function Formulaire({ local }: { local: boolean }) {
         accepteRegles: true, prenomVisible: f.get("prenomVisible") === "on",
       }),
     });
-    if (rep.ok) return setEtat("envoye");
-    setErreur((await rep.json().catch(() => ({}))).erreur ?? "Une erreur est survenue. Réessayez.");
+    const corps = await rep.json().catch(() => ({}));
+    // Plus de courriel à confirmer (23 nov. 2026) : on entre directement dans son espace.
+    if (rep.ok) { window.location.href = corps.vers ?? "/compte"; return; }
+    setErreur(corps.erreur ?? "Une erreur est survenue. Réessayez.");
     setEtat("saisie");
   }
-
-  if (etat === "envoye")
-    return (
-      <div>
-        <p className="ok" style={{ fontSize: 15 }}>✓ Presque fini : vérifiez vos courriels.</p>
-        <p className="note">Cliquez sur le lien reçu pour confirmer votre courriel. Votre compte et votre lien personnel s'activent à ce moment-là ; ensuite, vous vous connectez avec votre courriel et votre mot de passe.</p>
-        {local && <p className="local">Sur l'ordinateur, les courriels arrivent dans la <a href="/dev/courriels">boîte locale</a>.</p>}
-      </div>
-    );
 
   return (
     <form onSubmit={envoyer} noValidate={false}>

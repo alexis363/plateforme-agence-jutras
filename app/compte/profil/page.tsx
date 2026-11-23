@@ -13,7 +13,7 @@ export default async function Profil() {
       <div className="bloc" style={{ maxWidth: 720 }}>
         <FormulaireProfil prenom={m.prenom} nom={m.nom} cellulaire={m.cellulaire} prenomVisible={m.prenomVisible} />
         <label className="champ" style={{ marginTop: 18 }}><span>Courriel pour les virements Interac</span><input value={m.courriel} readOnly /></label>
-        <p className="ok" style={{ margin: "-6px 0 6px" }}>✓ Courriel confirmé · ton lien est actif</p>
+        <p className="ok" style={{ margin: "-6px 0 6px" }}>✓ Ton lien est actif</p>
         <p className="note" style={{ margin: 0 }}>Règles acceptées le {m.accepteRegles ? dateLongue(m.accepteRegles) : "—"}. Pour changer de courriel, écris à alexis@agencejutras.com.</p>
       </div>
       <div className="bloc" style={{ maxWidth: 720, marginTop: 20 }}>

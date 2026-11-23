@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { creerMembre, creerJeton } from "@/lib/depot.ts";
+import { creerMembre, membreParCourriel, normaliserCourriel } from "@/lib/depot.ts";
 import { envoyerCourriel, adresseApp } from "@/lib/courriel.ts";
-import { estCourrielAdmin } from "@/lib/session.ts";
+import { estCourrielAdmin, ouvrirSession } from "@/lib/session.ts";
 import { hacherMotDePasse, LONGUEUR_MIN } from "@/lib/motdepasse.ts";
 
 const Schema = z.object({
@@ -14,32 +14,28 @@ const Schema = z.object({
   prenomVisible: z.boolean(),
 });
 
+// Plus de vérification du courriel (décision d'Alexis du 23 nov. 2026) : le compte et le lien s'activent tout de
+// suite, et la session s'ouvre. Un courriel déjà inscrit ne donne jamais accès au compte existant.
 export async function POST(req: Request) {
   const d = Schema.safeParse(await req.json().catch(() => null));
   if (!d.success) return Response.json({ erreur: `Vérifiez les champs : tous sont requis, le mot de passe a au moins ${LONGUEUR_MIN} caractères et les règles doivent être acceptées.` }, { status: 400 });
 
+  if (await membreParCourriel(normaliserCourriel(d.data.courriel)))
+    return Response.json({ erreur: "Un compte existe déjà avec ce courriel. Connectez-vous, ou choisissez « Mot de passe oublié »." }, { status: 409 });
+
   const hache = await hacherMotDePasse(d.data.motDePasse);
   const m = await creerMembre({ ...d.data, motDePasse: hache }, estCourrielAdmin(d.data.courriel) ? "admin" : "membre");
+  await ouvrirSession(m);
 
-  // Même réponse que le courriel soit nouveau ou déjà inscrit : la page ne révèle pas qui est membre.
-  // Le courriel, lui, dit la vérité à son propriétaire.
-  if (m.confirme) {
-    await envoyerCourriel({
-      a: m.courriel,
-      sujet: "Vous avez déjà un compte",
-      texte: `Bonjour ${m.prenom}, quelqu'un (sans doute vous) a voulu créer un compte avec ce courriel, mais vous en avez déjà un. Connectez-vous avec votre mot de passe, ou choisissez « Mot de passe oublié » si vous ne vous en souvenez plus.`,
-      lien: `${adresseApp()}/connexion`,
-    });
-  } else {
-    const jeton = await creerJeton(m.id, "confirmer");
-    await envoyerCourriel({
-      a: m.courriel,
-      sujet: "Confirmez votre courriel pour activer votre lien",
-      texte: `Bonjour ${m.prenom}, merci de vous joindre au programme ambassadeur Kairos de l'Agence Jutras. Confirmez votre courriel pour activer votre lien personnel. Ce courriel servira aussi à vous verser vos récompenses par virement Interac.`,
-      lien: `${adresseApp()}/api/verifier?jeton=${jeton}`,
-      kairos: true,
-      bouton: "Confirmer mon courriel",
-    });
-  }
-  return Response.json({ ok: true });
+  // Un mot de bienvenue, pour qu'il retrouve son lien. S'il ne part pas, l'inscription reste bonne.
+  await envoyerCourriel({
+    a: m.courriel,
+    sujet: "Bienvenue dans le programme ambassadeur Kairos",
+    texte: `Bonjour ${m.prenom}, ton compte est prêt. Ton lien personnel t'attend dans ton espace : partage-le à un entrepreneur qui passe ses soirées dans la paperasse. Ce courriel servira aussi à te verser tes récompenses par virement Interac.`,
+    lien: `${adresseApp()}/compte`,
+    kairos: true,
+    bouton: "Voir mon lien",
+  }).catch(() => undefined);
+
+  return Response.json({ vers: m.role === "admin" ? "/admin" : "/compte" });
 }

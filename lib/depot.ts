@@ -164,7 +164,7 @@ export async function creerMembre(d: NouveauMembre, role: Membre["role"]): Promi
     if (existant) return existant;
     const pris = liste(await sb()!.from("membres").select("slug").like("slug", `${base}%`)).map((r) => r.slug as string);
     const r = await sb()!.from("membres").insert({
-      ...champs, slug: slugLibre(base, pris), mot_de_passe: d.motDePasse, role, confirme: false,
+      ...champs, slug: slugLibre(base, pris), mot_de_passe: d.motDePasse, role, confirme: true, // plus de vérification du courriel (23 nov. 2026)
       accepte_regles: maintenant(), prenom_visible: d.prenomVisible,
     }).select("*").single();
     // Deux inscriptions au même instant : l'unicité du courriel tranche, on renvoie le compte gagnant.
@@ -181,7 +181,7 @@ export async function creerMembre(d: NouveauMembre, role: Membre["role"]): Promi
     if (existant) return existant;
     const m: Membre = {
       id: randomUUID(), ...champs, slug: slugLibre(base, b.membres.map((x) => x.slug)), motDePasse: d.motDePasse,
-      role, confirme: false, accepteRegles: maintenant(), prenomVisible: d.prenomVisible, creeLe: maintenant(),
+      role, confirme: true, accepteRegles: maintenant(), prenomVisible: d.prenomVisible, creeLe: maintenant(),
     };
     b.membres.push(m);
     return m;

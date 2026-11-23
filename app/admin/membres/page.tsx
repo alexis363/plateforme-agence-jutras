@@ -11,7 +11,7 @@ export default async function Membres() {
   return (
     <>
       <h1 className="titre">Les <em>ambassadeurs</em></h1>
-      <p className="sous">Les personnes inscrites au programme de référence. Un lien ne s'active qu'une fois le courriel confirmé.</p>
+      <p className="sous">Les personnes inscrites au programme de référence. Leur lien est actif dès l'inscription.</p>
       {liste.length === 0 ? <p className="vide">Aucun ambassadeur pour l'instant.</p> : (
         <div className="table-defile"><table>
           <thead><tr><th>Ambassadeur</th><th>Lien</th><th>Inscrit le</th><th>Visites du lien</th><th>Demandes de rendez-vous</th><th>Clients</th><th></th></tr></thead>

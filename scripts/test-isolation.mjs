@@ -1,5 +1,5 @@
 // Prouve qu'un membre ne voit jamais les références d'un autre, et que la console est fermée aux membres.
-// Le test passe par les vraies routes : inscription, courriel de confirmation, session, pages et API.
+// Le test passe par les vraies routes : inscription (qui ouvre la session, 23 nov. 2026), session, pages et API.
 //
 //   npm run local, puis npm run test:isolation                       → sur le fichier local
 //   npm run supabase, puis npm run test:isolation -- --supabase      → sur la vraie base Supabase (.env.local)
@@ -40,32 +40,21 @@ const MDP = "un mot de passe de test";
 async function inscrire(prenom, cell) {
   const courriel = `${prenom.toLowerCase()}-${id}@test.local`;
   const rep = await fetch(`${APP}/api/inscription`, json({ prenom, nom: "Test", cellulaire: cell, courriel, motDePasse: MDP, accepteRegles: true, prenomVisible: true }));
-  verifier(rep.ok, `inscription de ${prenom}`);
+  const temoin = (rep.headers.get("set-cookie") ?? "").split(";")[0];
+  verifier(rep.ok && temoin.startsWith("aj_session="), `inscription de ${prenom} : la session s'ouvre tout de suite`);
   await relire();
   const membre = base().membres.find((m) => m.courriel === courriel);
-  return { courriel, slug: membre.slug };
-}
-
-async function confirmer(courriel) {
-  const lien = courriels().find((c) => c.a === courriel)?.lien;
-  const rep = await fetch(lien, { redirect: "manual" });
-  const temoin = (rep.headers.get("set-cookie") ?? "").split(";")[0];
-  verifier(rep.status >= 300 && rep.status < 400 && temoin.startsWith("aj_session="), `confirmation du courriel de ${courriel.split("-")[0]}`);
-  return { temoin, lien };
+  return { courriel, slug: membre.slug, temoin };
 }
 
 const page = (chemin, temoin) => fetch(`${APP}${chemin}`, { redirect: "manual", headers: temoin ? { Cookie: temoin } : {} });
 
-// 1. Deux membres, A et B. Le lien de C n'est jamais confirmé.
+// 1. Deux membres, A et B : le compte et le lien sont actifs dès l'inscription.
 const A = await inscrire("Annie", "418-555-1001");
 const B = await inscrire("Bruno", "418-555-1002");
-const C = await inscrire("Carl", "418-555-1003");
-const sa = await confirmer(A.courriel);
-const sb = await confirmer(B.courriel);
-
-// 2. Un lien de confirmation ne sert qu'une fois.
-const reutilise = await fetch(sa.lien, { redirect: "manual" });
-verifier((reutilise.headers.get("location") ?? "").includes("lien=expire"), "un lien de confirmation déjà utilisé est refusé");
+const sa = { temoin: A.temoin };
+const sb = { temoin: B.temoin };
+verifier((await page(`/r/${A.slug}`)).status === 200, "le lien d'Annie fonctionne dès l'inscription");
 
 // 2b. Connexion par courriel et mot de passe.
 const connecter = (courriel, motDePasse) => fetch(`${APP}/api/connexion`, json({ courriel, motDePasse }));
@@ -77,16 +66,14 @@ verifier((await page("/compte", temoinA2)).status === 200, "la session ouverte p
 verifier((await page("/compte/qui-referer", temoinA2)).status === 200, "la page « Qui référer ? » s'ouvre pour un membre connecté");
 verifier((await page("/compte/comment-ca-fonctionne", temoinA2)).status === 200, "la page « Comment ça fonctionne » s'ouvre pour un membre connecté");
 verifier(!(await (await page("/compte/profil", temoinA2)).text()).includes("scrypt$"), "le mot de passe haché n'apparaît jamais dans une page");
-const nonConfirme = await connecter(C.courriel, MDP);
-verifier(nonConfirme.status === 403 && !(nonConfirme.headers.get("set-cookie") ?? "").includes("aj_session"), "un compte non confirmé ne s'ouvre pas, même avec le bon mot de passe");
 
-// Se réinscrire avec le même courriel ne change pas le mot de passe.
-await fetch(`${APP}/api/inscription`, json({ prenom: "Pirate", nom: "Test", cellulaire: "418-555-9999", courriel: A.courriel, motDePasse: "le mot de passe du pirate", accepteRegles: true, prenomVisible: true }));
+// Se réinscrire avec le même courriel n'ouvre pas le compte existant et ne change pas son mot de passe.
+const pirate = await fetch(`${APP}/api/inscription`, json({ prenom: "Pirate", nom: "Test", cellulaire: "418-555-9999", courriel: A.courriel, motDePasse: "le mot de passe du pirate", accepteRegles: true, prenomVisible: true }));
+verifier(pirate.status === 409 && !(pirate.headers.get("set-cookie") ?? "").includes("aj_session"), "se réinscrire avec un courriel existant n'ouvre aucune session");
 verifier((await connecter(A.courriel, "le mot de passe du pirate")).status === 401 && (await connecter(A.courriel, MDP)).ok, "se réinscrire avec un courriel existant ne change pas son mot de passe");
 
 // Trop d'essais : bloqué, même avec le bon mot de passe.
 const D = await inscrire("Denis", "418-555-1004");
-await confirmer(D.courriel);
 for (let i = 0; i < 5; i++) await connecter(D.courriel, "pas le bon");
 verifier((await connecter(D.courriel, MDP)).status === 429, "après 5 essais ratés, le compte est bloqué 15 minutes");
 
@@ -97,7 +84,6 @@ const NOUVEAU = "un tout nouveau mot de passe";
 verifier((await fetch(`${APP}/api/reinitialiser`, json({ jeton: jetonReinit, motDePasse: NOUVEAU }))).ok, "le lien « mot de passe oublié » permet d'en choisir un nouveau");
 verifier((await fetch(`${APP}/api/reinitialiser`, json({ jeton: jetonReinit, motDePasse: "encore un autre essai" }))).status === 400, "ce lien ne sert qu'une fois");
 verifier((await connecter(B.courriel, MDP)).status === 401 && (await connecter(B.courriel, NOUVEAU)).ok, "l'ancien mot de passe ne marche plus, le nouveau oui");
-verifier((await fetch(`${APP}/api/reinitialiser`, json({ jeton: new URL(sa.lien).searchParams.get("jeton"), motDePasse: "avec un lien de confirmation" }))).status === 400, "un lien de confirmation ne peut pas changer un mot de passe");
 verifier((await fetch(`${APP}/api/mot-de-passe`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ actuel: MDP, nouveau: "x".repeat(12) }) })).status === 401, "sans session, le mot de passe ne se change pas");
 
 // 3. Une référence pour B seulement.
@@ -142,8 +128,8 @@ const faux = sa.temoin.replace(/.$/, (c) => (c === "A" ? "B" : "A"));
 verifier(((await page("/compte", faux)).headers.get("location") ?? "").includes("/connexion"), "un témoin falsifié est refusé");
 verifier((await fetch(`${APP}/api/profil`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: "{}" })).status === 401, "sans session, le profil ne se modifie pas");
 
-// 6. Un lien jamais confirmé ne fonctionne pas.
-verifier((await page(`/r/${C.slug}`)).status === 404, "le lien d'un membre non confirmé n'existe pas");
+// 6. Un lien qui n'existe pas renvoie « introuvable ».
+verifier((await page(`/r/personne-${id}`)).status === 404, "un lien inconnu n'existe pas");
 
 // 7. Les règles : se référer soi-même, et le premier qui réfère gagne.
 await fetch(`${APP}/api/r/${B.slug}/demande`, json({ contact: "Bruno Test", entreprise: `Moi ${id}`, metier: "Ramonage", cellulaire: "418-555-1002", courriel: `prospect-${id}@test.local`, casseTete: "", moment: "lundi, midi" }));

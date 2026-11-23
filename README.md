@@ -107,7 +107,9 @@ Affichées avec le fonctionnement en 3 étapes dans « Comment ça fonctionne »
 Connexion par **courriel et mot de passe**, pour les membres comme pour la console (décision d'Alexis du 17 nov. 2026).
 Mots de passe hachés avec scrypt (`lib/motdepasse.ts`), 10 caractères minimum, blocage de 15 min après 5 essais ratés
 (table `tentatives` dans la base).
-Le courriel est confirmé une fois, par un lien valide 48 h ; « Mot de passe oublié » envoie un lien valide 30 min, à usage unique.
+Plus de confirmation du courriel depuis le 23 nov. 2026 (choix d'Alexis) : l'inscription active le compte et ouvre la session,
+puis envoie un courriel de bienvenue ; un courriel déjà inscrit est refusé (409) sans ouvrir de session. « Mot de passe oublié »
+envoie un lien valide 30 min, à usage unique.
 
 ## Ce qui manque avant la mise en ligne
 

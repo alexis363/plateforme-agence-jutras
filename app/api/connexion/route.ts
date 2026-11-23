@@ -1,6 +1,5 @@
 import { z } from "zod";
-import { membreParCourriel, creerJeton, normaliserCourriel, estBloque, noterEchec, effacerEchecs } from "@/lib/depot.ts";
-import { envoyerCourriel, adresseApp } from "@/lib/courriel.ts";
+import { membreParCourriel, confirmerMembre, normaliserCourriel, estBloque, noterEchec, effacerEchecs } from "@/lib/depot.ts";
 import { ouvrirSession, estCourrielAdmin } from "@/lib/session.ts";
 import { verifierMotDePasse } from "@/lib/motdepasse.ts";
 import { amorcerAdmin } from "@/lib/amorce.ts";
@@ -33,20 +32,9 @@ export async function POST(req: Request) {
   }
   await effacerEchecs(courriel);
 
-  // Bon mot de passe, mais courriel jamais confirmé : on renvoie le lien de confirmation.
-  if (!m.confirme) {
-    const jeton = await creerJeton(m.id, "confirmer");
-    await envoyerCourriel({
-      a: m.courriel,
-      sujet: "Confirmez votre courriel pour activer votre lien",
-      texte: `Bonjour ${m.prenom}, confirmez votre courriel pour activer votre compte et votre lien personnel du programme ambassadeur Kairos.`,
-      lien: `${adresseApp()}/api/verifier?jeton=${jeton}`,
-      kairos: true,
-      bouton: "Confirmer mon courriel",
-    });
-    return Response.json({ erreur: "Confirmez d'abord votre courriel : on vient de vous renvoyer le lien." }, { status: 403 });
-  }
+  // Un compte créé avant le 23 nov. 2026 et jamais confirmé : le bon mot de passe suffit maintenant.
+  if (!m.confirme) await confirmerMembre(m.id);
 
-  await ouvrirSession(m);
+  await ouvrirSession({ ...m, confirme: true });
   return Response.json({ vers: estCourrielAdmin(m.courriel) ? "/admin" : "/compte" });
 }
