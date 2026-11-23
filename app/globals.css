@@ -478,3 +478,9 @@ button.refuge-nom:focus-visible{outline:2px solid var(--k-olive);outline-offset:
 .cf-titre-regles{margin-top:44px;scroll-margin-top:80px}
 
 .chiffres-montagne{margin-top:16px}
+
+/* En-tête : le bouton de retour au site, en haut à gauche de l'espace ambassadeur */
+.haut-gauche{display:flex;align-items:center;gap:18px;min-width:0}
+.retour-site{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--bg);text-decoration:none;border:1px solid rgba(245,240,235,.35);padding:6px 12px;white-space:nowrap;transition:border-color .2s,color .2s}
+.retour-site:hover{border-color:var(--terra);color:var(--terra)}
+@media (max-width:820px){.haut-gauche{gap:10px}.retour-site{padding:5px 9px;font-size:12px}}

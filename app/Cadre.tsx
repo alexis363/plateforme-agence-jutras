@@ -23,7 +23,11 @@ export default function Cadre({ membre, etiquette, entrees, pied, children }: {
   return (
     <>
       <header className="haut">
-        <Link href="/" style={{ textDecoration: "none" }}><Marque etiquette={etiquette} /></Link>
+        <div className="haut-gauche">
+          {/* Retour au site de l'Agence Jutras, depuis l'espace ambassadeur (Alexis, 23 nov. 2026). */}
+          {!console_ && <a className="retour-site" href="https://www.agencejutras.com"><span aria-hidden="true">←</span> Site web</a>}
+          <Link href="/" style={{ textDecoration: "none" }}><Marque etiquette={etiquette} /></Link>
+        </div>
         <div className="compte">
           {membre.role === "admin" && (
             <Link className="sortir" href={etiquette === "Console" ? "/compte" : "/admin"} style={{ textDecoration: "none" }}>
