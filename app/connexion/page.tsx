@@ -8,6 +8,7 @@ export default async function Connexion({ searchParams }: { searchParams: Promis
   const { lien, supprime } = await searchParams;
   return (
     <div className="acces">
+      <a className="retour-site acces-retour" href="https://www.agencejutras.com"><span aria-hidden="true">←</span> Site web</a>
       <div className="boite">
         <Marque />
         <h1>Votre <em>compte</em></h1>

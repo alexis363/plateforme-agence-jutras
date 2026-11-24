@@ -10,6 +10,7 @@ export const dynamic = "force-dynamic";
 export default function Inscription() {
   return (
     <div className="acces">
+      <a className="retour-site acces-retour" href="https://www.agencejutras.com"><span aria-hidden="true">←</span> Site web</a>
       <div className="boite">
         <Marque />
         <h1>Obtenez votre <em>lien personnel</em></h1>
