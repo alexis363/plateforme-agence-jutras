@@ -1,5 +1,5 @@
 import { exigerAdmin } from "@/lib/session.ts";
-import { reglagesAgenda, plagesLibres, PREAVIS_H, agendaSimule } from "@/lib/agenda.ts";
+import { reglagesAgenda, plagesLibres, PREAVIS_H, agendaSimule, agendasLus } from "@/lib/agenda.ts";
 import FormulaireReglages from "./FormulaireReglages.tsx";
 
 // Réglages de l'agenda (demande d'Alexis du 18 nov. 2026) : durée, pause entre les rendez-vous, disponibilités.
@@ -7,6 +7,7 @@ export default async function Reglages() {
   await exigerAdmin();
   const r = await reglagesAgenda();
   const jours = await plagesLibres().catch(() => null);
+  const lus = await agendasLus().catch(() => null);
   const nb = jours?.reduce((n, j) => n + j.plages.length, 0) ?? 0;
   return (
     <>
@@ -22,6 +23,13 @@ export default async function Reglages() {
           {jours === null && <p className="vide">L'agenda Google ne répond pas pour l'instant.</p>}
           {jours?.length === 0 && <p className="vide">Aucune plage libre dans les 3 prochaines semaines.</p>}
           {!!jours?.length && <p className="note" style={{ marginTop: -6 }}>{nb} plage{nb > 1 ? "s" : ""} libre{nb > 1 ? "s" : ""}, une fois votre agenda Google retiré</p>}
+          {lus && (
+            <p className="note">
+              {lus.listeRefusee
+                ? "⚠ Google refuse la liste de vos agendas : seul l'agenda principal bloque les plages. Relancez « npm run google » pour donner l'accès."
+                : `Agendas qui bloquent les plages (${lus.noms.length}) : ${lus.noms.join(", ")}`}
+            </p>
+          )}
           {jours?.map((j) => (
             <div className="tache" key={j.date}><div className="t-txt"><b>{j.libelle}</b><small>{j.plages.map((p) => p.heure).join(" · ")}</small></div></div>
           ))}

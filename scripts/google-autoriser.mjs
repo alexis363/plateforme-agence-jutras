@@ -4,7 +4,8 @@
 //
 // Prérequis dans .env.local : GOOGLE_CLIENT_ID et GOOGLE_CLIENT_SECRET (client OAuth « Application de bureau »).
 // Le script ouvre la page d'accord de Google, reçoit la réponse sur l'ordinateur, puis écrit GOOGLE_REFRESH_TOKEN
-// dans .env.local. Aucune clé ne s'affiche. Accès demandés : voir les heures occupées, créer des rendez-vous.
+// dans .env.local. Aucune clé ne s'affiche. Accès demandés : voir les heures occupées, créer des rendez-vous,
+// et voir la liste des agendas (pour que tous les agendas, même partagés, bloquent les plages — 26 nov. 2026).
 import { createServer } from "node:http";
 import { readFileSync, writeFileSync } from "node:fs";
 import { exec } from "node:child_process";
@@ -15,7 +16,8 @@ if (!ID || !SECRET) { console.error("GOOGLE_CLIENT_ID ou GOOGLE_CLIENT_SECRET ma
 
 const PORT = 3101;
 const RETOUR = `http://127.0.0.1:${PORT}/rappel`;
-const ACCES = ["https://www.googleapis.com/auth/calendar.events", "https://www.googleapis.com/auth/calendar.freebusy"];
+const ACCES = ["https://www.googleapis.com/auth/calendar.events", "https://www.googleapis.com/auth/calendar.freebusy",
+  "https://www.googleapis.com/auth/calendar.calendarlist.readonly"];
 const url = "https://accounts.google.com/o/oauth2/v2/auth?" + new URLSearchParams({
   client_id: ID, redirect_uri: RETOUR, response_type: "code", scope: ACCES.join(" "),
   access_type: "offline", prompt: "consent", login_hint: "alexis@agencejutras.com",
@@ -56,6 +58,13 @@ const serveur = createServer(async (req, res) => {
   res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }).end("<p style='font-family:sans-serif'>✓ C'est fait. Vous pouvez fermer cet onglet et revenir à la plateforme.</p>");
   console.log(`\n✓ Accès à l'agenda enregistré dans .env.local (GOOGLE_REFRESH_TOKEN).`);
   console.log(essai.ok ? "✓ Lecture de l'agenda : ça marche." : `⚠ Lecture de l'agenda refusée (${essai.status}).`);
+  const liste = await fetch("https://www.googleapis.com/calendar/v3/users/me/calendarList?minAccessRole=freeBusyReader", {
+    headers: { Authorization: `Bearer ${d.access_token}` },
+  });
+  if (liste.ok) {
+    const items = (await liste.json()).items ?? [];
+    console.log(`✓ Agendas qui bloqueront les plages (${items.length}) : ${items.map((c) => c.summaryOverride || c.summary).join(", ")}`);
+  } else console.log(`⚠ Liste des agendas refusée (${liste.status}) : seul l'agenda principal bloquera les plages.`);
   console.log("  Copiez GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET et GOOGLE_REFRESH_TOKEN dans Vercel, puis Redeploy.");
   serveur.close();
 });

@@ -140,25 +140,43 @@ async function jetonGoogle(): Promise<string> {
   return jeton.valeur;
 }
 
-// Tous les agendas du compte Google : l'agenda principal, plus chaque agenda de la liste (« Cours du cégep »,
-// « Devoirs », « Famille »…). Les jours fériés et les anniversaires des contacts ne bloquent rien.
-// Si Google refuse la liste (droits du jeton), on garde au moins l'agenda principal.
-let agendas: { ids: string[]; expire: number } | null = null;
-async function tousLesAgendas(): Promise<string[]> {
-  if (agendas && agendas.expire > Date.now()) return agendas.ids;
+// Tous les agendas du compte Google : l'agenda principal, plus chaque agenda de la liste, y compris ceux qu'un autre
+// compte partage avec lui (« Cours du cégep », « Devoirs », « Famille »… d'Alexis Jutras Pro, partagés le 26 nov. 2026).
+// Les jours fériés et les anniversaires des contacts ne bloquent rien. Lire la liste demande l'accès
+// « calendar.calendarlist.readonly » (npm run google) ; sans lui, on garde au moins l'agenda principal.
+type ListeAgendas = { ids: string[]; noms: Record<string, string>; listeRefusee: boolean; expire: number };
+let agendas: ListeAgendas | null = null;
+async function tousLesAgendas(): Promise<ListeAgendas> {
+  if (agendas && agendas.expire > Date.now()) return agendas;
   const principal = decodeURIComponent(calendrier());
   const ids = new Set([principal]);
+  const noms: Record<string, string> = { [principal]: "Agenda principal" };
+  let listeRefusee = true;
   try {
     const rep = await fetch("https://www.googleapis.com/calendar/v3/users/me/calendarList?minAccessRole=freeBusyReader&maxResults=250", {
       headers: { Authorization: `Bearer ${await jetonGoogle()}` },
     });
     if (rep.ok) {
-      const d = await rep.json() as { items?: { id: string }[] };
-      for (const c of d.items ?? []) if (!/#holiday@|#contacts@|addressbook#/.test(c.id)) ids.add(c.id);
+      listeRefusee = false;
+      const d = await rep.json() as { items?: { id: string; summary?: string; summaryOverride?: string; primary?: boolean }[] };
+      for (const c of d.items ?? []) {
+        if (/#holiday@|#contacts@|addressbook#/.test(c.id)) continue;
+        const id = c.primary ? principal : c.id;
+        ids.add(id);
+        noms[id] = c.summaryOverride || c.summary || c.id;
+      }
     }
   } catch { /* la liste reste à l'agenda principal */ }
-  agendas = { ids: [...ids].slice(0, 50), expire: Date.now() + 10 * 60e3 };
-  return agendas.ids;
+  // Une liste refusée est redemandée vite, une liste lue est gardée 10 minutes.
+  agendas = { ids: [...ids].slice(0, 50), noms, listeRefusee, expire: Date.now() + (listeRefusee ? 60e3 : 10 * 60e3) };
+  return agendas;
+}
+
+// Pour la console : quels agendas bloquent vraiment les plages en ce moment.
+export async function agendasLus(): Promise<{ noms: string[]; listeRefusee: boolean } | null> {
+  if (!googleConfigure()) return null;
+  const l = await tousLesAgendas();
+  return { noms: l.ids.map((id) => l.noms[id] ?? id), listeRefusee: l.listeRefusee };
 }
 
 // Ce qui est déjà pris entre deux instants, dans tous les agendas. Les rendez-vous de la plateforme comptent pour
@@ -167,7 +185,7 @@ async function occupe(de: number, a: number, duree: number): Promise<{ debut: nu
   const deja = (await rendezVousPris(new Date(de - 120 * 60e3).toISOString()))
     .map((iso) => ({ debut: Date.parse(iso), fin: Date.parse(iso) + duree * 60e3 }));
   if (!googleConfigure()) return deja;
-  const ids = await tousLesAgendas();
+  const { ids } = await tousLesAgendas();
   const rep = await fetch("https://www.googleapis.com/calendar/v3/freeBusy", {
     method: "POST",
     headers: { Authorization: `Bearer ${await jetonGoogle()}`, "Content-Type": "application/json" },
