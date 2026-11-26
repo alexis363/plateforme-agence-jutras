@@ -4,21 +4,15 @@ import { useEffect, useState } from "react";
 type Jour = { date: string; libelle: string; plages: { debut: string; heure: string }[] };
 
 const MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
-const MC = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juill.", "août", "sept.", "oct.", "nov.", "déc."];
-const enDate = (cle: string) => new Date(Date.UTC(+cle.slice(0, 4), +cle.slice(5, 7) - 1, +cle.slice(8, 10)));
-
-// Le calendrier (demande d'Alexis du 26 nov. 2026) : des semaines du dimanche au samedi, de la semaine de la
-// première plage à celle de la dernière.
-function semaines(jours: Jour[]) {
-  const d0 = enDate(jours[0].date), d1 = enDate(jours[jours.length - 1].date);
-  d0.setUTCDate(d0.getUTCDate() - d0.getUTCDay());
-  d1.setUTCDate(d1.getUTCDate() + 6 - d1.getUTCDay());
-  const cases: { cle: string; n: number; mois: number }[] = [];
-  for (const c = new Date(d0); c <= d1; c.setUTCDate(c.getUTCDate() + 1))
-    cases.push({ cle: c.toISOString().slice(0, 10), n: c.getUTCDate(), mois: c.getUTCMonth() });
-  const [m1, m2] = [d0.getUTCMonth(), d1.getUTCMonth()];
-  const titre = (m1 === m2 ? MOIS[m1] : `${MOIS[m1]} – ${MOIS[m2]}`) + ` ${d1.getUTCFullYear()}`;
-  return { cases, titre: titre.charAt(0).toUpperCase() + titre.slice(1) };
+// Le calendrier, mois par mois (demande d'Alexis du 26 nov. 2026) : on arrive sur le mois en cours,
+// la case d'aujourd'hui est encadrée, des flèches passent d'un mois à l'autre.
+const deux = (n: number) => String(n).padStart(2, "0");
+const decaler = (cle: string, n: number) => new Date(Date.UTC(+cle.slice(0, 4), +cle.slice(5, 7) - 1 + n, 1)).toISOString().slice(0, 7);
+function grilleMois(mois: string) {
+  const a = +mois.slice(0, 4), m = +mois.slice(5, 7) - 1;
+  const decal = new Date(Date.UTC(a, m, 1)).getUTCDay(), nb = new Date(Date.UTC(a, m + 1, 0)).getUTCDate();
+  const nom = MOIS[m].charAt(0).toUpperCase() + MOIS[m].slice(1) + " " + a;
+  return { nom, decal, cles: Array.from({ length: nb }, (_, i) => `${mois}-${deux(i + 1)}`) };
 }
 
 // Un seul formulaire (exigence d'Alexis du 18 nov. 2026) : les coordonnées et la plage, ensemble.
@@ -28,6 +22,7 @@ export default function FormulaireRdv({ slug, qui }: { slug: string; qui: string
   const [jour, setJour] = useState(0);
   const [debut, setDebut] = useState<string | null>(null);
   const [vue, setVue] = useState<"cal" | "liste">("cal");
+  const [mois, setMois] = useState<string | null>(null);
   const [erreur, setErreur] = useState("");
   const [occupe, setOccupe] = useState(false);
   const [fait, setFait] = useState<{ prenom: string; moment: string | null } | null>(null);
@@ -76,7 +71,13 @@ export default function FormulaireRdv({ slug, qui }: { slug: string; qui: string
   const heure = (p: { debut: string; heure: string }) => (
     <button type="button" key={p.debut} className={`heure${p.debut === debut ? " actif" : ""}`} onClick={() => { setDebut(p.debut); setErreur(""); }}>{p.heure}</button>
   );
-  const cal = jours?.length ? semaines(jours) : null;
+  const maintenant = new Date();
+  const cleAuj = `${maintenant.getFullYear()}-${deux(maintenant.getMonth() + 1)}-${deux(maintenant.getDate())}`;
+  const premierMois = cleAuj.slice(0, 7);
+  const dernierMois = jours?.length && jours[jours.length - 1].date.slice(0, 7) > premierMois ? jours[jours.length - 1].date.slice(0, 7) : premierMois;
+  const moisVu = mois ?? premierMois;
+  const cal = jours?.length ? grilleMois(moisVu) : null;
+  const jourDansMois = !!jours?.[jour] && jours[jour].date.slice(0, 7) === moisVu;
   return (
     <form className="formrdv" onSubmit={envoyer}>
       {qui && <span className="reco-tag">✓ Recommandé par {qui}</span>}
@@ -95,20 +96,26 @@ export default function FormulaireRdv({ slug, qui }: { slug: string; qui: string
           </div>
           {vue === "cal" && cal && (
             <>
-              <p className="mois">{cal.titre}</p>
+              <div className="mois">
+                <button type="button" aria-label="Mois précédent" disabled={moisVu <= premierMois} onClick={() => setMois(decaler(moisVu, -1))}>‹</button>
+                <span>{cal.nom}</span>
+                <button type="button" aria-label="Mois suivant" disabled={moisVu >= dernierMois} onClick={() => setMois(decaler(moisVu, 1))}>›</button>
+              </div>
               <div className="cal">
                 {["D", "L", "M", "M", "J", "V", "S"].map((x, i) => <span className="ent" key={i}>{x}</span>)}
-                {cal.cases.map((c) => {
-                  const i = jours.findIndex((j) => j.date === c.cle);
-                  const txt = <>{c.n}{c.n === 1 && <small>{MC[c.mois]}</small>}</>;
+                {Array.from({ length: cal.decal }, (_, i) => <span key={`v${i}`} />)}
+                {cal.cles.map((cle) => {
+                  const i = jours.findIndex((j) => j.date === cle);
+                  const ici = cle === cleAuj ? " auj" : "";
+                  const titre = ici ? "Aujourd'hui" : undefined;
                   return i < 0
-                    ? <span className="j-vide" key={c.cle}>{txt}</span>
-                    : <button type="button" key={c.cle} className={`jcal${i === jour ? " actif" : ""}`} aria-pressed={i === jour}
-                        onClick={() => { setJour(i); setDebut(null); }}>{txt}</button>;
+                    ? <span className={`j-vide${ici}`} key={cle} title={titre}>{+cle.slice(8)}</span>
+                    : <button type="button" key={cle} title={titre} className={`jcal${ici}${i === jour ? " actif" : ""}`} aria-pressed={i === jour}
+                        onClick={() => { setJour(i); setDebut(null); }}>{+cle.slice(8)}</button>;
                 })}
               </div>
-              <p className="jour-choisi">{jours[jour].libelle} · choisissez une heure</p>
-              <div className="heures">{plages.map(heure)}</div>
+              <p className="jour-choisi">{jourDansMois ? `${jours[jour].libelle} · choisissez une heure` : "Choisissez une journée en couleur."}</p>
+              {jourDansMois && <div className="heures">{plages.map(heure)}</div>}
             </>
           )}
           {vue === "liste" && (
