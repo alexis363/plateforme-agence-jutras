@@ -1,7 +1,7 @@
 import { plagesLibres } from "@/lib/agenda.ts";
 import { reponse, preflight } from "@/lib/cors.ts";
 
-// Les plages libres d'Alexis (cette semaine et la suivante), pour le formulaire du site web.
+// Les plages libres d'Alexis (cette semaine et les 3 suivantes), pour le formulaire du site web.
 // Rien de privé : seulement des heures libres.
 export async function GET(req: Request) {
   try {

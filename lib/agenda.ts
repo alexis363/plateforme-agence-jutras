@@ -2,7 +2,8 @@
 //
 // 1. Les plages viennent des réglages de la console (durée, pause, disponibilités, en heure de Québec),
 //    moins le préavis de 12 h. Sans réglages enregistrés, les valeurs par défaut ci-dessous s'appliquent.
-// 2. Ce qui est déjà inscrit dans l'agenda Google les bloque (requête « freeBusy »).
+// 2. Ce qui est déjà inscrit dans N'IMPORTE LEQUEL des agendas du compte Google les bloque (requête « freeBusy ») :
+//    cours, devoirs, études, entraînement, famille, trajet de bus… (demande d'Alexis du 26 nov. 2026).
 // 3. La réservation crée l'événement dans l'agenda, et Google envoie l'invitation à l'entrepreneur.
 //
 // Sans les clés Google (sur l'ordinateur), l'agenda est simulé : les plages s'affichent, rien n'est bloqué ni créé.
@@ -86,10 +87,10 @@ function plagesTheoriques(r: ReglagesAgenda, maintenant = Date.now()): { debut: 
   const auj = enQuebec(maintenant);
   const premier = maintenant + PREAVIS_H * 3600e3;
   const sortie = [];
-  // Cette semaine et la semaine prochaine seulement (décision d'Alexis du 18 nov. 2026) : jusqu'au dimanche
-  // de la semaine prochaine, la semaine allant du lundi au dimanche.
+  // Cette semaine et les 3 semaines suivantes (demande d'Alexis du 26 nov. 2026 : « au moins les 3 prochaines
+  // semaines ») : jusqu'au dimanche, 3 semaines plus loin, la semaine allant du lundi au dimanche.
   const jourSemaine = new Date(Date.UTC(auj.a, auj.m - 1, auj.j)).getUTCDay();
-  const horizon = ((7 - jourSemaine) % 7) + 7;
+  const horizon = ((7 - jourSemaine) % 7) + 21;
   for (let i = 0; i <= horizon; i++) {
     const d = new Date(Date.UTC(auj.a, auj.m - 1, auj.j + i));
     const [a, m, j] = [d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate()];
@@ -139,28 +140,54 @@ async function jetonGoogle(): Promise<string> {
   return jeton.valeur;
 }
 
-// Ce qui est déjà pris entre deux instants. Les rendez-vous de la plateforme comptent pour la durée réglée.
+// Tous les agendas du compte Google : l'agenda principal, plus chaque agenda de la liste (« Cours du cégep »,
+// « Devoirs », « Famille »…). Les jours fériés et les anniversaires des contacts ne bloquent rien.
+// Si Google refuse la liste (droits du jeton), on garde au moins l'agenda principal.
+let agendas: { ids: string[]; expire: number } | null = null;
+async function tousLesAgendas(): Promise<string[]> {
+  if (agendas && agendas.expire > Date.now()) return agendas.ids;
+  const principal = decodeURIComponent(calendrier());
+  const ids = new Set([principal]);
+  try {
+    const rep = await fetch("https://www.googleapis.com/calendar/v3/users/me/calendarList?minAccessRole=freeBusyReader&maxResults=250", {
+      headers: { Authorization: `Bearer ${await jetonGoogle()}` },
+    });
+    if (rep.ok) {
+      const d = await rep.json() as { items?: { id: string }[] };
+      for (const c of d.items ?? []) if (!/#holiday@|#contacts@|addressbook#/.test(c.id)) ids.add(c.id);
+    }
+  } catch { /* la liste reste à l'agenda principal */ }
+  agendas = { ids: [...ids].slice(0, 50), expire: Date.now() + 10 * 60e3 };
+  return agendas.ids;
+}
+
+// Ce qui est déjà pris entre deux instants, dans tous les agendas. Les rendez-vous de la plateforme comptent pour
+// la durée réglée.
 async function occupe(de: number, a: number, duree: number): Promise<{ debut: number; fin: number }[]> {
   const deja = (await rendezVousPris(new Date(de - 120 * 60e3).toISOString()))
     .map((iso) => ({ debut: Date.parse(iso), fin: Date.parse(iso) + duree * 60e3 }));
   if (!googleConfigure()) return deja;
+  const ids = await tousLesAgendas();
   const rep = await fetch("https://www.googleapis.com/calendar/v3/freeBusy", {
     method: "POST",
     headers: { Authorization: `Bearer ${await jetonGoogle()}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ timeMin: new Date(de).toISOString(), timeMax: new Date(a).toISOString(), items: [{ id: decodeURIComponent(calendrier()) }] }),
+    body: JSON.stringify({ timeMin: new Date(de).toISOString(), timeMax: new Date(a).toISOString(), items: ids.map((id) => ({ id })) }),
   });
   if (!rep.ok) throw new Error(`Google Agenda ne répond pas (${rep.status})`);
   const d = await rep.json();
-  const cal = Object.values(d.calendars ?? {})[0] as { busy?: { start: string; end: string }[]; errors?: unknown[] } | undefined;
-  if (!cal || cal.errors?.length) throw new Error("Agenda Google introuvable");
-  return [...deja, ...(cal.busy ?? []).map((b) => ({ debut: Date.parse(b.start), fin: Date.parse(b.end) }))];
+  const cals = (d.calendars ?? {}) as Record<string, { busy?: { start: string; end: string }[]; errors?: unknown[] }>;
+  // L'agenda principal doit répondre ; un autre agenda en erreur est simplement ignoré.
+  const principal = cals[ids[0]];
+  if (!principal || principal.errors?.length) throw new Error("Agenda Google introuvable");
+  const pris = Object.values(cals).flatMap((c) => (c.errors?.length ? [] : c.busy ?? []));
+  return [...deja, ...pris.map((b) => ({ debut: Date.parse(b.start), fin: Date.parse(b.end) }))];
 }
 
 // Une plage est prise si elle touche un moment occupé, en gardant la pause avant et après.
 const chevauche = (debut: number, pris: { debut: number; fin: number }[], r: ReglagesAgenda) =>
   pris.some((p) => debut - r.pause * 60e3 < p.fin && debut + (r.duree + r.pause) * 60e3 > p.debut);
 
-// Les plages libres de cette semaine et de la suivante, regroupées par jour.
+// Les plages libres de cette semaine et des 3 suivantes, regroupées par jour.
 export async function plagesLibres(): Promise<JourDePlages[]> {
   const r = await reglagesAgenda();
   const toutes = plagesTheoriques(r);

@@ -62,7 +62,7 @@ export default function FormulaireRdv({ slug, qui }: { slug: string; qui: string
 
       {jours === null && <p className="s">Chargement de mes disponibilités…</p>}
       {jours?.length === 0 && (
-        <p className="erreur" style={{ marginBottom: 16 }}>Aucune plage libre cette semaine ni la suivante. Laissez vos coordonnées : je vous contacte pour en trouver une.</p>
+        <p className="erreur" style={{ marginBottom: 16 }}>Aucune plage libre dans les 3 prochaines semaines. Laissez vos coordonnées : je vous contacte pour en trouver une.</p>
       )}
       {!!jours?.length && (
         <>

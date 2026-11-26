@@ -12,7 +12,7 @@ export default async function Reglages() {
     <>
       <h1 className="titre">Réglages, <em>votre agenda.</em></h1>
       <p className="sous">
-        Ce que montrent les formulaires de réservation (site web et liens de référence) · préavis de {PREAVIS_H} h · cette semaine et la suivante
+        Ce que montrent les formulaires de réservation (site web et liens de référence) · préavis de {PREAVIS_H} h · cette semaine et les 3 suivantes · tous les agendas du compte Google bloquent les plages
         {agendaSimule() ? " · agenda Google non branché ici (simulé)" : ""}
       </p>
       <div className="deux">
@@ -20,7 +20,7 @@ export default async function Reglages() {
         <div className="bloc">
           <h2>Ce que voient les clients</h2>
           {jours === null && <p className="vide">L'agenda Google ne répond pas pour l'instant.</p>}
-          {jours?.length === 0 && <p className="vide">Aucune plage libre cette semaine ni la suivante.</p>}
+          {jours?.length === 0 && <p className="vide">Aucune plage libre dans les 3 prochaines semaines.</p>}
           {!!jours?.length && <p className="note" style={{ marginTop: -6 }}>{nb} plage{nb > 1 ? "s" : ""} libre{nb > 1 ? "s" : ""}, une fois votre agenda Google retiré</p>}
           {jours?.map((j) => (
             <div className="tache" key={j.date}><div className="t-txt"><b>{j.libelle}</b><small>{j.plages.map((p) => p.heure).join(" · ")}</small></div></div>

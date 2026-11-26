@@ -36,7 +36,7 @@ mot de passe `demonstration`. Les courriels (confirmation, mot de passe oublié)
 
 Sur la page d'un lien, l'entrepreneur remplit **un seul formulaire** : ses coordonnées et une plage de 15 minutes
 (décision d'Alexis du 18 nov. 2026). `lib/agenda.ts` calcule les plages à partir de ses disponibilités (heure de
-Québec, préavis de 12 h, cette semaine et la suivante jusqu'au dimanche), retire ce qui est occupé dans son agenda Google et ce que la plateforme a déjà
+Québec, préavis de 12 h, cette semaine et les 3 suivantes jusqu'au dimanche), retire ce qui est occupé dans tous les agendas de son compte Google et ce que la plateforme a déjà
 réservé, puis crée l'événement dans l'agenda (Google envoie l'invitation). La référence garde `rendez_vous` et
 `evenement_id` ; le membre voit « Rencontre le … », la console aussi.
 
