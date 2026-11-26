@@ -3,12 +3,31 @@ import { useEffect, useState } from "react";
 
 type Jour = { date: string; libelle: string; plages: { debut: string; heure: string }[] };
 
+const MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+const MC = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juill.", "août", "sept.", "oct.", "nov.", "déc."];
+const enDate = (cle: string) => new Date(Date.UTC(+cle.slice(0, 4), +cle.slice(5, 7) - 1, +cle.slice(8, 10)));
+
+// Le calendrier (demande d'Alexis du 26 nov. 2026) : des semaines du dimanche au samedi, de la semaine de la
+// première plage à celle de la dernière.
+function semaines(jours: Jour[]) {
+  const d0 = enDate(jours[0].date), d1 = enDate(jours[jours.length - 1].date);
+  d0.setUTCDate(d0.getUTCDate() - d0.getUTCDay());
+  d1.setUTCDate(d1.getUTCDate() + 6 - d1.getUTCDay());
+  const cases: { cle: string; n: number; mois: number }[] = [];
+  for (const c = new Date(d0); c <= d1; c.setUTCDate(c.getUTCDate() + 1))
+    cases.push({ cle: c.toISOString().slice(0, 10), n: c.getUTCDate(), mois: c.getUTCMonth() });
+  const [m1, m2] = [d0.getUTCMonth(), d1.getUTCMonth()];
+  const titre = (m1 === m2 ? MOIS[m1] : `${MOIS[m1]} – ${MOIS[m2]}`) + ` ${d1.getUTCFullYear()}`;
+  return { cases, titre: titre.charAt(0).toUpperCase() + titre.slice(1) };
+}
+
 // Un seul formulaire (exigence d'Alexis du 18 nov. 2026) : les coordonnées et la plage, ensemble.
 // Les plages sont les vraies disponibilités d'Alexis, lues dans son agenda Google.
 export default function FormulaireRdv({ slug, qui }: { slug: string; qui: string | null }) {
   const [jours, setJours] = useState<Jour[] | null>(null);
   const [jour, setJour] = useState(0);
   const [debut, setDebut] = useState<string | null>(null);
+  const [vue, setVue] = useState<"cal" | "liste">("cal");
   const [erreur, setErreur] = useState("");
   const [occupe, setOccupe] = useState(false);
   const [fait, setFait] = useState<{ prenom: string; moment: string | null } | null>(null);
@@ -54,6 +73,10 @@ export default function FormulaireRdv({ slug, qui }: { slug: string; qui: string
     );
 
   const plages = jours?.[jour]?.plages ?? [];
+  const heure = (p: { debut: string; heure: string }) => (
+    <button type="button" key={p.debut} className={`heure${p.debut === debut ? " actif" : ""}`} onClick={() => { setDebut(p.debut); setErreur(""); }}>{p.heure}</button>
+  );
+  const cal = jours?.length ? semaines(jours) : null;
   return (
     <form className="formrdv" onSubmit={envoyer}>
       {qui && <span className="reco-tag">✓ Recommandé par {qui}</span>}
@@ -66,21 +89,35 @@ export default function FormulaireRdv({ slug, qui }: { slug: string; qui: string
       )}
       {!!jours?.length && (
         <>
-          <div className="jours">
-            {jours.map((j, i) => {
-              const [nom, num] = j.libelle.split(" ");
-              return (
-                <button type="button" key={j.date} className={`jour${i === jour ? " actif" : ""}`} onClick={() => { setJour(i); setDebut(null); }}>
-                  <small>{nom}</small><b>{num}</b>
-                </button>
-              );
-            })}
+          <div className="vues" role="group" aria-label="Choisir la vue">
+            <button type="button" className={vue === "cal" ? "actif" : ""} aria-pressed={vue === "cal"} onClick={() => setVue("cal")}>Calendrier</button>
+            <button type="button" className={vue === "liste" ? "actif" : ""} aria-pressed={vue === "liste"} onClick={() => setVue("liste")}>Liste</button>
           </div>
-          <div className="heures">
-            {plages.map((p) => (
-              <button type="button" key={p.debut} className={`heure${p.debut === debut ? " actif" : ""}`} onClick={() => { setDebut(p.debut); setErreur(""); }}>{p.heure}</button>
-            ))}
-          </div>
+          {vue === "cal" && cal && (
+            <>
+              <p className="mois">{cal.titre}</p>
+              <div className="cal">
+                {["D", "L", "M", "M", "J", "V", "S"].map((x, i) => <span className="ent" key={i}>{x}</span>)}
+                {cal.cases.map((c) => {
+                  const i = jours.findIndex((j) => j.date === c.cle);
+                  const txt = <>{c.n}{c.n === 1 && <small>{MC[c.mois]}</small>}</>;
+                  return i < 0
+                    ? <span className="j-vide" key={c.cle}>{txt}</span>
+                    : <button type="button" key={c.cle} className={`jcal${i === jour ? " actif" : ""}`} aria-pressed={i === jour}
+                        onClick={() => { setJour(i); setDebut(null); }}>{txt}</button>;
+                })}
+              </div>
+              <p className="jour-choisi">{jours[jour].libelle} · choisissez une heure</p>
+              <div className="heures">{plages.map(heure)}</div>
+            </>
+          )}
+          {vue === "liste" && (
+            <div className="liste">
+              {jours.map((j) => (
+                <div className="liste-j" key={j.date}><b>{j.libelle}</b><div className="heures">{j.plages.map(heure)}</div></div>
+              ))}
+            </div>
+          )}
         </>
       )}
 

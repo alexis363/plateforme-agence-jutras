@@ -75,6 +75,24 @@
 .landing .formrdv h3{font-size:22px;margin-bottom:4px}
 .landing .formrdv .s{color:var(--sec);font-size:14px;margin:0 0 16px}
 .landing .jours{display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));gap:8px;margin-bottom:14px}
+/* Calendrier du dimanche au samedi, ou liste (26 nov. 2026) */
+.landing .vues{display:inline-flex;border:1px solid var(--bord);margin-bottom:16px}
+.landing .vues button{font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;padding:9px 16px;background:none;border:0;color:var(--sec);cursor:pointer}
+.landing .vues button.actif{background:var(--olive);color:var(--cream)}
+.landing .mois{margin:0 0 10px;font-family:var(--serif);font-size:20px}
+.landing .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.landing .cal .ent{font-size:10px;letter-spacing:.2em;text-align:center;color:var(--sec);padding:2px 0 4px}
+.landing .cal .j-vide,.landing .cal .jcal{aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:15px}
+.landing .cal .j-vide{color:var(--sec);opacity:.45}
+.landing .cal .jcal{border:1px solid var(--olive);background:var(--olive-lt);cursor:pointer;font-weight:500;padding:0}
+.landing .cal .jcal.actif{background:var(--olive);color:var(--cream)}
+.landing .cal small{display:block;font-size:9px;letter-spacing:.06em;line-height:1;margin-top:2px;font-weight:400}
+.landing .jour-choisi{margin:16px 0 8px;font-size:14px}
+.landing .liste-j{display:grid;grid-template-columns:110px minmax(0,1fr);gap:12px;align-items:start;padding:12px 0;border-top:1px solid var(--bord)}
+.landing .liste-j b{font-weight:500;font-size:14px;padding-top:9px}
+.landing .liste-j .heures{margin:0;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:6px}
+.landing .liste{margin-bottom:22px}
+@media (max-width:520px){.landing .liste-j{grid-template-columns:minmax(0,1fr);gap:8px}.landing .liste-j b{padding-top:0}}
 .landing .jour{border:1px solid var(--bord);background:none;padding:10px 4px;cursor:pointer;text-align:center;line-height:1.25}
 .landing .jour small{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--sec)}
 .landing .jour b{font-family:var(--serif);font-weight:400;font-size:22px}
